@@ -14,6 +14,8 @@ import { ShoppingCart } from '@/components/order/shopping-cart';
 import { SidebarNavigation } from '@/components/order/sidebar-navigation';
 import { MobileNavbar } from '@/components/order/mobile-navbar';
 import { BottomButtonBar } from '@/components/order/bottom-button-bar';
+import { useLanguage } from '@/lib/contexts/language-context';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 function OrderPageContent() {
   const searchParams = useSearchParams();
@@ -21,6 +23,7 @@ function OrderPageContent() {
   const [activeSection, setActiveSection] = useState<'menu' | 'promo' | 'cart'>('menu');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { addItem, setTableId: setCartTableId } = useCartStore();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const tableIdParam = searchParams.get('tableId');
@@ -35,9 +38,9 @@ function OrderPageContent() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t('error.title')}</AlertTitle>
           <AlertDescription>
-            Table ID tidak ditemukan. Silakan scan QR Code yang tersedia di meja Anda.
+            {t('error.noTableId')}
           </AlertDescription>
         </Alert>
       </div>
@@ -60,13 +63,16 @@ function OrderPageContent() {
           <div className="container max-w-7xl mx-auto p-4 md:p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Selamat Datang</h1>
+                <h1 className="text-3xl font-bold mb-2">{t('common.welcome')}</h1>
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Meja:</span>
+                  <span className="text-muted-foreground">{t('common.table')}:</span>
                   <Badge variant="default" className="text-base px-3 py-1">
                     {tableId}
                   </Badge>
                 </div>
+              </div>
+              <div className="hidden md:block">
+                <LanguageSwitcher />
               </div>
             </div>
 
@@ -79,7 +85,7 @@ function OrderPageContent() {
                     <TabsList className="w-full justify-start overflow-x-auto">
                       {categories.map((category) => (
                         <TabsTrigger key={category} value={category} className="capitalize">
-                          {category === 'all' ? 'Semua' : category}
+                          {category === 'all' ? t('common.all') : category}
                         </TabsTrigger>
                       ))}
                     </TabsList>
@@ -95,7 +101,7 @@ function OrderPageContent() {
 
               {activeSection === 'promo' && (
                 <div>
-                  <h2 className="text-2xl font-bold mb-6">Promo Spesial</h2>
+                  <h2 className="text-2xl font-bold mb-6">{t('promo.specialPromo')}</h2>
                   <div className="space-y-4">
                     {mockPromotions.map((promo) => (
                       <PromotionsCarousel key={promo.id} promotions={[promo]} />
@@ -115,7 +121,7 @@ function OrderPageContent() {
                   <TabsList>
                     {categories.map((category) => (
                       <TabsTrigger key={category} value={category} className="capitalize">
-                        {category === 'all' ? 'Semua' : category}
+                        {category === 'all' ? t('common.all') : category}
                       </TabsTrigger>
                     ))}
                   </TabsList>

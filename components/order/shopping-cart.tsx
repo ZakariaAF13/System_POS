@@ -7,9 +7,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, Plus, Minus, ShoppingCart as CartIcon } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
+import { useLanguage } from '@/lib/contexts/language-context';
 
 export function ShoppingCart() {
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCartStore();
+  const { t } = useLanguage();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -25,13 +27,13 @@ export function ShoppingCart() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CartIcon className="h-5 w-5" />
-            Keranjang Belanja
+            {t('common.cart')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <CartIcon className="h-16 w-16 text-muted-foreground mb-4" />
           <p className="text-muted-foreground text-center">
-            Keranjang belanja Anda masih kosong
+            {t('common.emptyCart')}
           </p>
         </CardContent>
       </Card>
@@ -44,9 +46,9 @@ export function ShoppingCart() {
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CartIcon className="h-5 w-5" />
-            Keranjang Belanja
+            {t('common.cart')}
           </span>
-          <Badge variant="secondary">{getTotalItems()} Item</Badge>
+          <Badge variant="secondary">{getTotalItems()} {t('common.item')}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-0">
@@ -111,13 +113,13 @@ export function ShoppingCart() {
       <Separator />
       <CardFooter className="flex-col gap-4 p-6">
         <div className="w-full flex justify-between items-center">
-          <span className="text-lg font-semibold">Total</span>
+          <span className="text-lg font-semibold">{t('common.total')}</span>
           <span className="text-2xl font-bold text-primary">
             {formatPrice(getTotalPrice())}
           </span>
         </div>
         <Button className="w-full" size="lg">
-          Checkout
+          {t('common.checkout')}
         </Button>
       </CardFooter>
     </Card>

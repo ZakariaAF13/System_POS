@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UtensilsCrossed, Tag, ShoppingCart } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/language-context';
 
 interface SidebarNavigationProps {
   activeSection: 'menu' | 'promo' | 'cart';
@@ -10,10 +11,12 @@ interface SidebarNavigationProps {
 }
 
 export function SidebarNavigation({ activeSection, onSectionChange }: SidebarNavigationProps) {
+  const { t } = useLanguage();
+
   const navItems = [
-    { id: 'menu' as const, label: 'Menu', icon: UtensilsCrossed },
-    { id: 'promo' as const, label: 'Promo', icon: Tag },
-    { id: 'cart' as const, label: 'Keranjang', icon: ShoppingCart },
+    { id: 'menu' as const, label: t('navigation.menu'), icon: UtensilsCrossed },
+    { id: 'promo' as const, label: t('navigation.promo'), icon: Tag },
+    { id: 'cart' as const, label: t('navigation.cart'), icon: ShoppingCart },
   ];
 
   return (

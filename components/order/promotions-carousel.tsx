@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Promotion } from '@/lib/types';
+import { useLanguage } from '@/lib/contexts/language-context';
 
 interface PromotionsCarouselProps {
   promotions: Promotion[];
@@ -13,6 +14,7 @@ interface PromotionsCarouselProps {
 export function PromotionsCarousel({ promotions }: PromotionsCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const { t } = useLanguage();
 
   const activePromotions = promotions.filter((p) => p.active);
 
@@ -52,7 +54,7 @@ export function PromotionsCarousel({ promotions }: PromotionsCarouselProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 text-white">
             <Badge className="mb-2 bg-red-600 hover:bg-red-700">
-              Diskon {activePromotions[currentIndex].discount}%
+              {t('promo.discount')} {activePromotions[currentIndex].discount}%
             </Badge>
             <h3 className="text-xl md:text-2xl font-bold mb-1">
               {activePromotions[currentIndex].title}

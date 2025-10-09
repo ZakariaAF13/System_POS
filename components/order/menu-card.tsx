@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Minus } from 'lucide-react';
 import { MenuItem } from '@/lib/types';
 import { useState } from 'react';
+import { useLanguage } from '@/lib/contexts/language-context';
 
 interface MenuCardProps {
   item: MenuItem;
@@ -14,6 +15,7 @@ interface MenuCardProps {
 
 export function MenuCard({ item, onAddToCart }: MenuCardProps) {
   const [quantity, setQuantity] = useState(1);
+  const { t } = useLanguage();
 
   const handleAddToCart = () => {
     onAddToCart(item, quantity);
@@ -42,7 +44,7 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps) {
         {!item.available && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <Badge variant="destructive" className="text-lg">
-              Tidak Tersedia
+              {t('common.notAvailable')}
             </Badge>
           </div>
         )}
@@ -88,7 +90,7 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps) {
           disabled={!item.available}
           className="flex-1"
         >
-          Tambah ke Keranjang
+          {t('common.addToCart')}
         </Button>
       </CardFooter>
     </Card>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UtensilsCrossed, Tag, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
+import { useLanguage } from '@/lib/contexts/language-context';
 
 interface BottomButtonBarProps {
   activeSection: 'menu' | 'promo' | 'cart';
@@ -12,12 +13,13 @@ interface BottomButtonBarProps {
 
 export function BottomButtonBar({ activeSection, onSectionChange }: BottomButtonBarProps) {
   const { getTotalItems } = useCartStore();
+  const { t } = useLanguage();
   const totalItems = getTotalItems();
 
   const navItems = [
-    { id: 'menu' as const, label: 'Menu', icon: UtensilsCrossed },
-    { id: 'promo' as const, label: 'Promo', icon: Tag },
-    { id: 'cart' as const, label: 'Keranjang', icon: ShoppingCart, badge: totalItems },
+    { id: 'menu' as const, label: t('navigation.menu'), icon: UtensilsCrossed },
+    { id: 'promo' as const, label: t('navigation.promo'), icon: Tag },
+    { id: 'cart' as const, label: t('navigation.cart'), icon: ShoppingCart, badge: totalItems },
   ];
 
   return (
