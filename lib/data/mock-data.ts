@@ -1,0 +1,85 @@
+import { MenuItem, Promotion } from '../types';
+
+export const mockMenuItems: MenuItem[] = [
+  {
+    id: '1',
+    name: 'Nasi Goreng Special',
+    description: 'Nasi goreng dengan telur, ayam, dan sayuran segar',
+    price: 25000,
+    image: 'https://images.pexels.com/photos/1624487/pexels-photo-1624487.jpeg',
+    category: 'Main Course',
+    available: true,
+  },
+  {
+    id: '2',
+    name: 'Mie Goreng',
+    description: 'Mie goreng pedas dengan topping seafood',
+    price: 22000,
+    image: 'https://images.pexels.com/photos/1907244/pexels-photo-1907244.jpeg',
+    category: 'Main Course',
+    available: true,
+  },
+  {
+    id: '3',
+    name: 'Soto Ayam',
+    description: 'Soto ayam tradisional dengan kuah bening',
+    price: 20000,
+    image: 'https://images.pexels.com/photos/4449063/pexels-photo-4449063.jpeg',
+    category: 'Main Course',
+    available: true,
+  },
+  {
+    id: '4',
+    name: 'Es Teh Manis',
+    description: 'Teh manis segar dengan es batu',
+    price: 5000,
+    image: 'https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg',
+    category: 'Drinks',
+    available: true,
+  },
+  {
+    id: '5',
+    name: 'Jus Alpukat',
+    description: 'Jus alpukat segar dengan susu cokelat',
+    price: 15000,
+    image: 'https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg',
+    category: 'Drinks',
+    available: true,
+  },
+  {
+    id: '6',
+    name: 'Pisang Goreng',
+    description: 'Pisang goreng crispy dengan topping keju',
+    price: 12000,
+    image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg',
+    category: 'Snacks',
+    available: true,
+  },
+];
+
+export const mockPromotions: Promotion[] = [
+  {
+    id: 'p1',
+    title: 'Diskon 20% untuk Nasi Goreng',
+    description: 'Berlaku setiap hari untuk semua varian nasi goreng',
+    image: 'https://images.pexels.com/photos/2433979/pexels-photo-2433979.jpeg',
+    discount: 20,
+    active: true,
+  },
+  {
+    id: 'p2',
+    title: 'Beli 2 Gratis 1 Minuman',
+    description: 'Promo spesial untuk semua jenis minuman',
+    image: 'https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg',
+    discount: 33,
+    active: true,
+  },
+  {
+    id: 'p3',
+    title: 'Paket Hemat Keluarga',
+    description: 'Hemat hingga 30% untuk paket keluarga',
+    image: 'https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg',
+    discount: 30,
+    active: true,
+  },
+];
