@@ -22,6 +22,7 @@ export interface CartItem {
   menuItem: MenuItem;
   quantity: number;
   notes?: string;
+  isTakeaway?: boolean;
 }
 
 export interface Order {

@@ -4,7 +4,7 @@ import { CartItem, MenuItem } from '../types';
 interface CartState {
   items: CartItem[];
   tableId: string | null;
-  addItem: (menuItem: MenuItem, quantity?: number, notes?: string) => void;
+  addItem: (menuItem: MenuItem, quantity?: number, notes?: string, isTakeaway?: boolean) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   updateNotes: (itemId: string, notes: string) => void;
@@ -18,22 +18,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   tableId: null,
 
-  addItem: (menuItem, quantity = 1, notes = '') => {
+  addItem: (menuItem, quantity = 1, notes = '', isTakeaway = false) => {
     set((state) => {
-      const existingItem = state.items.find(
-        (item) => item.menuItem.id === menuItem.id
-      );
-
-      if (existingItem) {
-        return {
-          items: state.items.map((item) =>
-            item.menuItem.id === menuItem.id
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          ),
-        };
-      }
-
       return {
         items: [
           ...state.items,
@@ -42,6 +28,7 @@ export const useCartStore = create<CartState>((set, get) => ({
             menuItem,
             quantity,
             notes,
+            isTakeaway,
           },
         ],
       };
