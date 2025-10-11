@@ -67,7 +67,17 @@ export function ShoppingCart() {
                   <h4 className="font-semibold text-sm line-clamp-1">
                     {item.menuItem.name}
                   </h4>
-                  <p className="text-sm text-primary font-medium">
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {item.isTakeaway && (
+                      <Badge variant="outline" className="h-5 px-2 text-[10px]">Takeaway</Badge>
+                    )}
+                  </div>
+                  {item.notes && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {item.notes}
+                    </p>
+                  )}
+                  <p className="text-sm text-primary font-medium mt-1">
                     {formatPrice(item.menuItem.price)}
                   </p>
                   <div className="flex items-center gap-2 mt-2">

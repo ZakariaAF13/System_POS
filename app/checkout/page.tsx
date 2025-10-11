@@ -176,9 +176,24 @@ export default function CheckoutPage() {
           <CardContent>
             <div className="space-y-3">
               {items.map((it) => (
-                <div key={it.id} className="flex justify-between text-sm">
-                  <span className="truncate">{it.menuItem.name} × {it.quantity}</span>
-                  <span className="font-semibold">{formatPrice(it.menuItem.price * it.quantity)}</span>
+                <div key={it.id} className="text-sm p-2 rounded-md border">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">{it.menuItem.name}</span>
+                        {it.isTakeaway && (
+                          <span className="text-[10px] px-2 py-0.5 rounded border bg-muted">Takeaway</span>
+                        )}
+                      </div>
+                      {it.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{it.notes}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-xs text-muted-foreground">× {it.quantity}</div>
+                      <div className="font-semibold">{formatPrice(it.menuItem.price * it.quantity)}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
               <div className="flex justify-between pt-3 border-t">
