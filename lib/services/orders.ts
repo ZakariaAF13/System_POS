@@ -13,6 +13,7 @@ export async function createOrder(params: {
   deliveryMethod?: 'dine_in' | 'takeaway' | 'delivery';
   status?: Order['status'];
 }) {
+  if (!db) throw new Error('FIREBASE_NOT_CONFIGURED: Missing Firebase env.');
   const ref = await addDoc(collection(db, 'orders'), {
     tableId: params.tableId,
     items: params.items,
@@ -29,12 +30,14 @@ export async function createOrder(params: {
 }
 
 export async function updateOrderStatus(orderId: string, status: Order['status']) {
+  if (!db) throw new Error('FIREBASE_NOT_CONFIGURED: Missing Firebase env.');
   await updateDoc(doc(db, 'orders', orderId), {
     status,
   });
 }
 
 export async function getActivePromotions(): Promise<Promotion[]> {
+  if (!db) return [];
   const q = query(collection(db, 'promotions'), where('active', '==', true));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) } as Promotion));

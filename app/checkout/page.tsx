@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const schema = z.object({
   customerName: z.string().min(2, 'Nama minimal 2 karakter'),
@@ -57,24 +57,40 @@ export default function CheckoutPage() {
 
     try {
       // 1) Create order (pending)
-      const orderId = await createOrder({
-        tableId,
-        items,
-        totalAmount: total,
-        status: 'pending',
-        customerName: values.customerName,
-        phone: values.phone,
-        address: values.address,
-        notes: values.notes,
-        deliveryMethod: values.deliveryMethod,
-      });
+      let orderId: string | null = null;
+      try {
+        orderId = await createOrder({
+          tableId,
+          items,
+          totalAmount: total,
+          status: 'pending',
+          customerName: values.customerName,
+          phone: values.phone,
+          address: values.address,
+          notes: values.notes,
+          deliveryMethod: values.deliveryMethod,
+        });
+      } catch (e: any) {
+        // If Firebase not configured, simulate a local order id so flow can continue in dev
+        if (String(e?.message || '').startsWith('FIREBASE_NOT_CONFIGURED')) {
+          orderId = `local-${Date.now()}`;
+        } else {
+          throw e;
+        }
+      }
 
       // 2) Simulate Midtrans processing
       setProcessing(true);
       await new Promise((res) => setTimeout(res, 3000));
 
       // 3) Update order status to 'paid'
-      await updateOrderStatus(orderId, 'paid');
+      try {
+        await updateOrderStatus(orderId!, 'paid');
+      } catch (e: any) {
+        if (!String(e?.message || '').startsWith('FIREBASE_NOT_CONFIGURED')) {
+          throw e;
+        }
+      }
 
       // 4) Clear cart and go to confirmation
       clearCart();
@@ -209,10 +225,10 @@ export default function CheckoutPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Processing Payment</DialogTitle>
+            <DialogDescription>Mohon tunggu, pembayaran Anda sedang diproses...</DialogDescription>
           </DialogHeader>
           <div className="py-6 text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" />
-            <p className="text-muted-foreground">Mohon tunggu, pembayaran Anda sedang diproses...</p>
           </div>
         </DialogContent>
       </Dialog>
