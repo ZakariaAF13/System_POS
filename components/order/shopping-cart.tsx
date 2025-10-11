@@ -8,8 +8,10 @@ import { Separator } from '@/components/ui/separator';
 import { Trash2, Plus, Minus, ShoppingCart as CartIcon } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useLanguage } from '@/lib/contexts/language-context';
+import { useRouter } from 'next/navigation';
 
 export function ShoppingCart() {
+  const router = useRouter();
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCartStore();
   const { t } = useLanguage();
 
@@ -118,7 +120,11 @@ export function ShoppingCart() {
             {formatPrice(getTotalPrice())}
           </span>
         </div>
-        <Button className="w-full" size="lg">
+        <Button
+          className="w-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          size="lg"
+          onClick={() => router.push('/checkout')}
+        >
           {t('common.checkout')}
         </Button>
       </CardFooter>

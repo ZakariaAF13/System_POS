@@ -30,6 +30,12 @@ export interface Order {
   tableId: string;
   items: CartItem[];
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'served';
+  status: 'pending' | 'confirmed' | 'preparing' | 'served' | 'paid';
   createdAt: Date;
+  // Checkout details
+  customerName?: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  deliveryMethod?: 'dine_in' | 'takeaway' | 'delivery';
 }
