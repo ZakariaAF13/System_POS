@@ -1,5 +1,4 @@
-import { addDoc, collection, doc, serverTimestamp, updateDoc, getDocs, query, where, DocumentData } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { CartItem, Order, Promotion } from '@/lib/types';
 
 export async function createOrder(params: {
@@ -13,32 +12,41 @@ export async function createOrder(params: {
   deliveryMethod?: 'dine_in' | 'takeaway' | 'delivery';
   status?: Order['status'];
 }) {
-  if (!db) throw new Error('FIREBASE_NOT_CONFIGURED: Missing Firebase env.');
-  const ref = await addDoc(collection(db, 'orders'), {
-    tableId: params.tableId,
-    items: params.items,
-    totalAmount: params.totalAmount,
+  const payload = {
+    table_id: params.tableId,
+    items: params.items as unknown as Record<string, unknown>,
+    total_amount: params.totalAmount,
     status: params.status ?? 'pending',
-    createdAt: serverTimestamp(),
-    customerName: params.customerName ?? null,
+    customer_name: params.customerName ?? null,
     phone: params.phone ?? null,
     address: params.address ?? null,
     notes: params.notes ?? null,
-    deliveryMethod: params.deliveryMethod ?? 'dine_in',
-  });
-  return ref.id;
+    delivery_method: params.deliveryMethod ?? 'dine_in',
+  };
+
+  const { data, error } = await supabase
+    .from('orders')
+    .insert(payload)
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateOrderStatus(orderId: string, status: Order['status']) {
-  if (!db) throw new Error('FIREBASE_NOT_CONFIGURED: Missing Firebase env.');
-  await updateDoc(doc(db, 'orders', orderId), {
-    status,
-  });
+  const { error } = await supabase
+    .from('orders')
+    .update({ status })
+    .eq('id', orderId);
+  if (error) throw error;
 }
 
 export async function getActivePromotions(): Promise<Promotion[]> {
-  if (!db) return [];
-  const q = query(collection(db, 'promotions'), where('active', '==', true));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) } as Promotion));
+  const { data, error } = await supabase
+    .from('promotions')
+    .select('id, title, description, image, discount, active')
+    .eq('active', true);
+  if (error) throw error;
+  return (data ?? []) as Promotion[];
 }
