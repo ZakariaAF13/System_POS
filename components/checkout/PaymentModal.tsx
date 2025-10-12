@@ -18,6 +18,7 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
   const [selectedMethod, setSelectedMethod] = useState<'qris' | 'gopay' | 'ovo' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [snapToken, setSnapToken] = useState<string | null>(null);
+  const functionsBase = process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_URL || '';
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -31,7 +32,13 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
     setIsProcessing(true);
 
     try {
-      const response = await fetch('/api/payment/create-transaction', {
+      if (!functionsBase) {
+        console.error('NEXT_PUBLIC_SUPABASE_FUNCTION_URL is not set');
+        setIsProcessing(false);
+        return;
+      }
+
+      const response = await fetch(`${functionsBase}/create-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,15 +83,17 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
 
   const handlePaymentCallback = async (result: any) => {
     try {
-      const response = await fetch('/api/payment/callback', {
+      if (!functionsBase) return;
+
+      const response = await fetch(`${functionsBase}/payment-callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orderId,
-          transactionStatus: result.transaction_status,
-          paymentType: result.payment_type,
+          order_id: orderId,
+          transaction_status: result?.transaction_status || 'settlement',
+          payment_type: result?.payment_type || (selectedMethod ?? 'qris'),
         }),
       });
 
