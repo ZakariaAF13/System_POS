@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useCartStore } from '@/lib/store/cart-store';
-import { createOrder, updateOrderStatus } from '@/lib/services/orders';
+import { supabase } from '@/lib/supabase';
+import PaymentModal from '@/components/checkout/PaymentModal';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const schema = z.object({
   customerName: z.string().min(2, 'Nama minimal 2 karakter'),
@@ -31,6 +31,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, tableId, getTotalPrice, clearCart } = useCartStore();
   const [processing, setProcessing] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -52,52 +54,56 @@ export default function CheckoutPage() {
       minimumFractionDigits: 0,
     }).format(price);
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+    script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const onSubmit = async (values: FormData) => {
     if (!tableId || items.length === 0) return;
 
+    setProcessing(true);
+
     try {
-      // 1) Create order (pending)
-      let orderId: string | null = null;
-      try {
-        orderId = await createOrder({
-          tableId,
-          items,
-          totalAmount: total,
-          status: 'pending',
-          customerName: values.customerName,
+      const { data: order, error } = await supabase
+        .from('orders')
+        .insert({
+          table_id: tableId,
+          customer_name: values.customerName,
           phone: values.phone,
           address: values.address,
           notes: values.notes,
-          deliveryMethod: values.deliveryMethod,
-        });
-      } catch (e: any) {
-        // If Firebase not configured, simulate a local order id so flow can continue in dev
-        if (String(e?.message || '').startsWith('FIREBASE_NOT_CONFIGURED')) {
-          orderId = `local-${Date.now()}`;
-        } else {
-          throw e;
-        }
+          delivery_method: values.deliveryMethod,
+          items: items,
+          total_amount: total,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating order:', error);
+        return;
       }
 
-      // 2) Simulate Midtrans processing
-      setProcessing(true);
-      await new Promise((res) => setTimeout(res, 3000));
-
-      // 3) Update order status to 'paid'
-      try {
-        await updateOrderStatus(orderId!, 'paid');
-      } catch (e: any) {
-        if (!String(e?.message || '').startsWith('FIREBASE_NOT_CONFIGURED')) {
-          throw e;
-        }
-      }
-
-      // 4) Clear cart and go to confirmation
-      clearCart();
-      router.replace(`/confirmation?orderId=${orderId}`);
+      setCurrentOrderId(order.id);
+      setShowPaymentModal(true);
+    } catch (error) {
+      console.error('Error:', error);
     } finally {
       setProcessing(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    clearCart();
+    router.push(`/confirmation?orderId=${currentOrderId}`);
   };
 
   return (
@@ -221,17 +227,15 @@ export default function CheckoutPage() {
         </Card>
       </div>
 
-      <Dialog open={processing}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Processing Payment</DialogTitle>
-            <DialogDescription>Mohon tunggu, pembayaran Anda sedang diproses...</DialogDescription>
-          </DialogHeader>
-          <div className="py-6 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {currentOrderId && (
+        <PaymentModal
+          open={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          amount={total}
+          orderId={currentOrderId}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }

@@ -15,9 +15,10 @@ export default function ConfirmationPage() {
       <Card className="w-full">
         <CardHeader className="text-center">
           <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-2" />
-          <CardTitle>Terima kasih! Pembayaran berhasil.</CardTitle>
+          <CardTitle>Pembayaran Berhasil!</CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
+          <p className="text-lg font-medium text-green-600">Pesanan Anda sedang disiapkan</p>
           {orderId && (
             <p className="text-sm text-muted-foreground">ID Pesanan: <span className="font-mono">{orderId}</span></p>
           )}
