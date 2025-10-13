@@ -6,8 +6,8 @@ import { UtensilsCrossed, Tag, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/language-context';
 
 interface SidebarNavigationProps {
-  activeSection: 'menu' | 'promo' | 'cart';
-  onSectionChange: (section: 'menu' | 'promo' | 'cart') => void;
+  activeSection: 'menu' | 'promo' | 'cart' ;
+  onSectionChange: (section: 'menu' | 'promo' | 'cart' ) => void;
 }
 
 export function SidebarNavigation({ activeSection, onSectionChange }: SidebarNavigationProps) {
@@ -24,7 +24,7 @@ export function SidebarNavigation({ activeSection, onSectionChange }: SidebarNav
       <ScrollArea className="h-full">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-6">Restaurant</h2>
-          <nav className="space-y-2">
+          <nav className="space-y-2" role="tablist" aria-label="Sidebar Navigation" aria-orientation="vertical">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -32,6 +32,9 @@ export function SidebarNavigation({ activeSection, onSectionChange }: SidebarNav
                   key={item.id}
                   variant={activeSection === item.id ? 'default' : 'ghost'}
                   className="w-full justify-start"
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSection === item.id}
                   onClick={() => onSectionChange(item.id)}
                 >
                   <Icon className="mr-2 h-5 w-5" />

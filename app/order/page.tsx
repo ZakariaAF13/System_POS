@@ -115,32 +115,47 @@ function OrderPageContent() {
               {activeSection === 'cart' && <ShoppingCart />}
             </div>
 
-            <div className="hidden md:grid md:grid-cols-3 gap-6">
-              <div className="col-span-2">
-                <PromotionsCarousel promotions={mockPromotions} />
+            <div className="hidden md:block">
+              {activeSection === 'menu' && (
+                <div>
+                  <PromotionsCarousel promotions={mockPromotions} />
 
-                <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
-                  <TabsList>
-                    {categories.map((category) => (
-                      <TabsTrigger key={category} value={category} className="capitalize">
-                        {category === 'all' ? t('common.all') : category}
-                      </TabsTrigger>
+                  <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
+                    <TabsList>
+                      {categories.map((category) => (
+                        <TabsTrigger key={category} value={category} className="capitalize">
+                          {category === 'all' ? t('common.all') : category}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {filteredMenuItems.map((item) => (
+                      <MenuCard key={item.id} item={item} onAddToCart={addItem} />
                     ))}
-                  </TabsList>
-                </Tabs>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {filteredMenuItems.map((item) => (
-                    <MenuCard key={item.id} item={item} onAddToCart={addItem} />
-                  ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="col-span-1">
-                <div className="sticky top-6">
-                  <ShoppingCart />
+              {activeSection === 'promo' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">{t('promo.specialPromo')}</h2>
+                  <div className="space-y-4">
+                    {mockPromotions.map((promo) => (
+                      <PromotionsCarousel key={promo.id} promotions={[promo]} />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {activeSection === 'cart' && (
+                <div className="max-w-xl">
+                  <div className="sticky top-6">
+                    <ShoppingCart />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
