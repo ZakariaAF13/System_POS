@@ -2,13 +2,13 @@
 
 import { AuthProvider } from '@/lib/contexts/auth-context';
 import ProtectedRoute from '@/components/cashier/ProtectedRoute';
-import Dashboard from '@/components/cashier/Dashboard';
+import CashierDashboard from '@/components/cashier/CashierDashboard';
 
 export default function CashierPage() {
   return (
     <AuthProvider>
       <ProtectedRoute>
-        <Dashboard />
+        <CashierDashboard />
       </ProtectedRoute>
     </AuthProvider>
   );
