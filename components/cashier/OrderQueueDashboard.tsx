@@ -92,16 +92,19 @@ export default function OrderQueueDashboard({ orders, onRefresh }: OrderQueueDas
     try {
       const { error } = await supabase
         .from('orders')
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: newStatus })
         .eq('id', orderId);
 
       if (error) throw error;
       onRefresh();
     } catch (error) {
       console.error('Error updating order status:', error);
+      // Surface common error fields if present
+      // @ts-ignore
+      if (error && (error.message || error.details || error.code)) {
+        // @ts-ignore
+        console.error('Update status details:', { code: error.code, message: error.message, details: error.details });
+      }
     } finally {
       setUpdatingOrderId(null);
     }

@@ -88,7 +88,7 @@ export default function CashierDashboard() {
   const pad = (n: number) => String(n).padStart(2, '0');
   const formattedShort = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(
     now.getHours()
-  )}:${pad(now.getMinutes())}`;
+  )}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
   const handleRefresh = () => {
     setRefreshing(true);
