@@ -40,6 +40,14 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [pendingReceipt, setPendingReceipt] = useState<{
+    items: { name: string; price: number; quantity: number; subtotal: number }[];
+    total: number;
+    customerName: string;
+    phone: string;
+    orderNumber?: string;
+    paymentType: 'cash' | 'edc' | 'ewallet';
+  } | null>(null);
 
   const categories = ['All', ...Array.from(new Set(mockMenuItems.map(item => item.category)))];
 
@@ -97,6 +105,62 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
     setPhone('');
   };
 
+  const printReceipt = (data: {
+    items: { name: string; price: number; quantity: number; subtotal: number }[];
+    total: number;
+    customerName: string;
+    phone: string;
+    orderNumber?: string;
+    paymentType: 'cash' | 'edc' | 'ewallet';
+  }) => {
+    const w = window.open('', 'PRINT', 'height=600,width=400');
+    if (!w) return;
+    const date = new Date();
+    const formatIDR = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+    const rows = data.items.map(it => `
+      <tr>
+        <td>${it.quantity}x ${it.name}</td>
+        <td style="text-align:right">${formatIDR(it.subtotal)}</td>
+      </tr>
+    `).join('');
+    w.document.write(`
+      <html>
+        <head>
+          <title>Struk</title>
+          <style>
+            body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; padding: 16px; }
+            h1 { font-size: 16px; margin: 0 0 8px; }
+            .meta { font-size: 12px; color: #555; margin-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            td { padding: 4px 0; }
+            .total { border-top: 1px dashed #999; margin-top: 8px; padding-top: 8px; font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <h1>Struk Pembelian</h1>
+          <div class="meta">
+            No. Order: ${data.orderNumber || '-'}<br />
+            Tanggal: ${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID')}<br />
+            Pelanggan: ${data.customerName || '-'} / ${data.phone || '-'}<br />
+            Pembayaran: ${data.paymentType.toUpperCase()}
+          </div>
+          <table>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          <div class="total">
+            Total: ${formatIDR(data.total)}
+          </div>
+          <p style="margin-top:12px; font-size:12px; text-align:center;">Terima kasih</p>
+          <script>window.onload = function(){ window.print(); window.onafterprint = window.close; }<\/script>
+        </body>
+      </html>
+    `);
+    w.document.close();
+    w.focus();
+  };
+
   const createOrder = async (paymentType: 'cash' | 'edc' | 'ewallet') => {
     if (cart.length === 0 || !customerName || !phone) {
       alert('Mohon lengkapi data pelanggan dan pilih menu');
@@ -133,27 +197,60 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
 
       if (error) throw error;
 
+      const receiptItems = cart.map(ci => ({
+        name: ci.menuItem.name,
+        price: ci.menuItem.price,
+        quantity: ci.quantity,
+        subtotal: ci.menuItem.price * ci.quantity,
+      }));
+
       if (paymentType === 'ewallet') {
+        setPendingReceipt({
+          items: receiptItems,
+          total: getTotalAmount(),
+          customerName,
+          phone,
+          orderNumber: (order as any).order_number,
+          paymentType: 'ewallet',
+        });
         setCurrentOrderId(order.id);
         setShowPaymentModal(true);
       } else {
+        printReceipt({
+          items: receiptItems,
+          total: getTotalAmount(),
+          customerName,
+          phone,
+          orderNumber: (order as any).order_number,
+          paymentType,
+        });
         clearCart();
         onOrderCreated();
-        alert('Pesanan berhasil dibuat!');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating order:', error);
-      alert('Gagal membuat pesanan');
+      if (error && (error.code || error.message || error.details || error.hint)) {
+        console.error('Create order details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+      }
+      alert(`Gagal membuat pesanan${error?.message ? `: ${error.message}` : ''}`);
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handlePaymentSuccess = async () => {
+    if (pendingReceipt) {
+      printReceipt(pendingReceipt);
+    }
     clearCart();
+    setPendingReceipt(null);
     setShowPaymentModal(false);
     onOrderCreated();
-    alert('Pembayaran berhasil!');
   };
 
   return (

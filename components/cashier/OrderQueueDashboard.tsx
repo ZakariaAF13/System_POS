@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
-import { Clock, ChevronRight, MapPin } from 'lucide-react';
+import { Clock, ChevronRight, MapPin, Lock } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -218,24 +218,38 @@ export default function OrderQueueDashboard({ orders, onRefresh }: OrderQueueDas
                     </div>
 
                     {nextStatus && (
-                      <Button
-                        onClick={() => handleStatusUpdate(order.id, nextStatus)}
-                        disabled={isUpdating}
-                        className="w-full"
-                        size="sm"
-                      >
-                        {isUpdating ? (
-                          <span className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Memperbarui...
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            {nextStatusLabel}
-                            <ChevronRight className="w-4 h-4" />
-                          </span>
-                        )}
-                      </Button>
+                      (() => {
+                        const isLocked = order.status === 'pending';
+                        return (
+                          <div className="w-full group">
+                            <Button
+                              onClick={() => !isLocked && handleStatusUpdate(order.id, nextStatus)}
+                              disabled={isUpdating || isLocked}
+                              className={`w-full ${isLocked ? 'cursor-not-allowed' : ''}`}
+                              size="sm"
+                              title={isLocked ? 'Pesanan belum dibayar' : undefined}
+                              aria-disabled={isLocked}
+                            >
+                              {isUpdating ? (
+                                <span className="flex items-center gap-2">
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  Memperbarui...
+                                </span>
+                              ) : isLocked ? (
+                                <span className="flex items-center gap-2">
+                                  {nextStatusLabel}
+                                  <Lock className="w-4 h-4 text-gray-500 opacity-60 group-hover:opacity-100 transition-opacity duration-150" />
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-2">
+                                  {nextStatusLabel}
+                                  <ChevronRight className="w-4 h-4" />
+                                </span>
+                              )}
+                            </Button>
+                          </div>
+                        );
+                      })()
                     )}
                   </CardContent>
                 </Card>
