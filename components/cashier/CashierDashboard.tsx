@@ -36,6 +36,7 @@ export default function CashierDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [now, setNow] = useState(new Date());
 
   const fetchOrders = async () => {
     try {
@@ -79,6 +80,16 @@ export default function CashierDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const formattedShort = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(
+    now.getHours()
+  )}:${pad(now.getMinutes())}`;
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchOrders();
@@ -102,26 +113,29 @@ export default function CashierDashboard() {
                 <p className="text-sm text-gray-600">{user?.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              <Button
-                onClick={handleSignOut}
-                variant="destructive"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Keluar
-              </Button>
+            <div className="flex items-start md:items-center gap-2 md:gap-4 flex-col md:flex-row">
+              <span className="text-sm text-gray-700 whitespace-nowrap">{formattedShort}</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button
+                  onClick={handleSignOut}
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Keluar
+                </Button>
+              </div>
             </div>
           </div>
         </div>
