@@ -69,6 +69,27 @@ function ReportsContent() {
 
   const total = useMemo(() => rows.reduce((s, r) => s + (Number(r.total_amount) || 0), 0), [rows]);
 
+  const exportCSV = () => {
+    const headers = ['Tanggal', 'Order ID', 'Status', 'Total'];
+    const csvRows = rows.map((r) => [
+      new Date(r.created_at).toLocaleString('id-ID'),
+      r.id,
+      r.status,
+      String(Number(r.total_amount))
+    ]);
+    const csv = [headers, ...csvRows]
+      .map((line) => line.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const fileBase = `laporan_${range}_${date}`;
+    a.download = `${fileBase}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -100,7 +121,10 @@ function ReportsContent() {
             />
           </div>
 
-          <button onClick={load} className="px-4 py-2 bg-slate-900 text-white rounded">Terapkan</button>
+          <div className="flex gap-2">
+            <button onClick={load} className="px-4 py-2 bg-slate-900 text-white rounded">Terapkan</button>
+            <button onClick={exportCSV} className="px-4 py-2 border rounded">Export CSV</button>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
