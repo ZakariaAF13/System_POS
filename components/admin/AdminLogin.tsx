@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { LogIn } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -10,23 +12,42 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, user, signOut } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (user) {
-      const role = (user.user_metadata as Record<string, any>)?.role;
-      if (role !== 'admin') {
-        setError('Akun ini bukan admin.');
-        signOut();
+      const role = (user.app_metadata as Record<string, any> | undefined)?.role
+        ?? (user.user_metadata as Record<string, any> | undefined)?.role;
+      if (role === 'admin') {
+        router.replace('/admin');
+      } else {
+        setError('Akun ini bukan admin. Mengarahkan ke dashboard kasir...');
+        router.replace('/cashier');
       }
     }
-  }, [user, signOut]);
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     const { error } = await signIn(email, password);
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await supabase.auth.getUser();
+    const u = data.user;
+    const role = (u?.app_metadata as Record<string, any> | undefined)?.role
+      ?? (u?.user_metadata as Record<string, any> | undefined)?.role;
+    if (role === 'admin') {
+      router.push('/admin');
+    } else {
+      router.push('/cashier');
+    }
+
     setLoading(false);
   };
 

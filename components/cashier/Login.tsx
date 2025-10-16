@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { LogIn } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,6 +12,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +20,21 @@ export default function Login() {
     setLoading(true);
 
     const { error } = await signIn(email, password);
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    const role = (user?.app_metadata as Record<string, any> | undefined)?.role
+      ?? (user?.user_metadata as Record<string, any> | undefined)?.role;
+    if (role === 'admin') {
+      router.push('/admin');
+    } else {
+      router.push('/cashier');
+    }
 
     setLoading(false);
   };

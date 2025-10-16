@@ -48,6 +48,8 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
     orderNumber?: string;
     paymentType: 'cash' | 'edc' | 'ewallet';
   } | null>(null);
+  const [selectedPaymentType, setSelectedPaymentType] = useState<'cash' | 'edc' | 'ewallet' | null>(null);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   const categories = ['All', ...Array.from(new Set(mockMenuItems.map(item => item.category)))];
 
@@ -186,7 +188,6 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
         })),
         total_amount: getTotalAmount(),
         status: paymentType === 'ewallet' ? 'pending' : 'paid',
-        payment_type: paymentType === 'cash' ? 'cash' : paymentType === 'edc' ? 'edc' : null,
       };
 
       const { data: order, error } = await supabase
@@ -216,7 +217,7 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
         setCurrentOrderId(order.id);
         setShowPaymentModal(true);
       } else {
-        printReceipt({
+        setPendingReceipt({
           items: receiptItems,
           total: getTotalAmount(),
           customerName,
@@ -224,8 +225,7 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
           orderNumber: (order as any).order_number,
           paymentType,
         });
-        clearCart();
-        onOrderCreated();
+        setPaymentCompleted(true);
       }
     } catch (error: any) {
       console.error('Error creating order:', error);
@@ -398,32 +398,76 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
 
           <div className="grid grid-cols-3 gap-2">
             <Button
-              onClick={() => createOrder('cash')}
+              onClick={() => { setSelectedPaymentType('cash'); setPaymentCompleted(false); setPendingReceipt(null); }}
               disabled={isProcessing || cart.length === 0 || !customerName || !phone}
-              className="w-full bg-green-600 hover:bg-green-700 h-20 flex flex-col gap-1"
+              variant={selectedPaymentType === 'cash' ? 'default' : 'secondary'}
+              className="w-full bg-green-600 hover:bg-green-700 h-20 flex flex-col gap-1 data-[variant=secondary]:bg-white data-[variant=secondary]:text-green-700"
             >
               <DollarSign className="w-5 h-5" />
               <span className="text-xs">Cash</span>
             </Button>
 
             <Button
-              onClick={() => createOrder('edc')}
+              onClick={() => { setSelectedPaymentType('edc'); setPaymentCompleted(false); setPendingReceipt(null); }}
               disabled={isProcessing || cart.length === 0 || !customerName || !phone}
-              className="w-full bg-blue-600 hover:bg-blue-700 h-20 flex flex-col gap-1"
+              variant={selectedPaymentType === 'edc' ? 'default' : 'secondary'}
+              className="w-full bg-blue-600 hover:bg-blue-700 h-20 flex flex-col gap-1 data-[variant=secondary]:bg-white data-[variant=secondary]:text-blue-700"
             >
               <CreditCard className="w-5 h-5" />
               <span className="text-xs">EDC Bank</span>
             </Button>
 
             <Button
-              onClick={() => createOrder('ewallet')}
+              onClick={() => { setSelectedPaymentType('ewallet'); setPaymentCompleted(false); setPendingReceipt(null); }}
               disabled={isProcessing || cart.length === 0 || !customerName || !phone}
-              className="w-full bg-purple-600 hover:bg-purple-700 h-20 flex flex-col gap-1"
+              variant={selectedPaymentType === 'ewallet' ? 'default' : 'secondary'}
+              className="w-full bg-purple-600 hover:bg-purple-700 h-20 flex flex-col gap-1 data-[variant=secondary]:bg-white data-[variant=secondary]:text-purple-700"
             >
               <Smartphone className="w-5 h-5" />
               <span className="text-xs">E-Wallet/QRIS</span>
             </Button>
           </div>
+
+          {selectedPaymentType && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button
+                onClick={() => createOrder(selectedPaymentType)}
+                disabled={isProcessing || paymentCompleted}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+              >
+                Pembayaran Berhasil
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (pendingReceipt) {
+                    printReceipt(pendingReceipt);
+                    clearCart();
+                    setPendingReceipt(null);
+                    setSelectedPaymentType(null);
+                    setPaymentCompleted(false);
+                    onOrderCreated();
+                  } else {
+                    printReceipt({
+                      items: cart.map(ci => ({
+                        name: ci.menuItem.name,
+                        price: ci.menuItem.price,
+                        quantity: ci.quantity,
+                        subtotal: ci.menuItem.price * ci.quantity,
+                      })),
+                      total: getTotalAmount(),
+                      customerName,
+                      phone,
+                      paymentType: selectedPaymentType!,
+                    });
+                  }
+                }}
+                className="w-full"
+              >
+                Cetak Struk
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
 
