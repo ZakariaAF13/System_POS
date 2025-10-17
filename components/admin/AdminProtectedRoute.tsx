@@ -9,7 +9,7 @@ interface AdminProtectedRouteProps {
 }
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
 
   if (loading) {
     return (
@@ -26,7 +26,6 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
     return <AdminLogin />;
   }
 
-  const role = (user.user_metadata as Record<string, any>)?.role;
   if (role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white p-6">

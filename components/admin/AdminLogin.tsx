@@ -4,28 +4,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, user, signOut } = useAuth();
+  const { signIn, user, role } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      const role = (user.app_metadata as Record<string, any> | undefined)?.role
-        ?? (user.user_metadata as Record<string, any> | undefined)?.role;
-      if (role === 'admin') {
-        router.replace('/admin');
-      } else {
-        setError('Akun ini bukan admin. Mengarahkan ke dashboard kasir...');
-        router.replace('/cashier');
-      }
+    if (user && role === 'admin') {
+      router.replace('/admin');
     }
-  }, [user, router]);
+  }, [user, role, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,15 +30,8 @@ export default function AdminLogin() {
       return;
     }
 
-    const { data } = await supabase.auth.getUser();
-    const u = data.user;
-    const role = (u?.app_metadata as Record<string, any> | undefined)?.role
-      ?? (u?.user_metadata as Record<string, any> | undefined)?.role;
-    if (role === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/cashier');
-    }
+    // Wait for role to be fetched from profiles
+    // AdminProtectedRoute will handle authorization
 
     setLoading(false);
   };
