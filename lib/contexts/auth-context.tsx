@@ -31,17 +31,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async (userId: string) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, role, full_name')
-        .eq('id', userId)
-        .single();
-      
-      if (!error && data) {
-        setProfile(data);
-        setRole(data.role);
-      } else {
+    const fetchProfile = async (userId: string, user: User) => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, role, full_name')
+          .eq('id', userId)
+          .single();
+        
+        if (!error && data) {
+          setProfile(data);
+          setRole(data.role);
+          console.log('✓ Profile loaded from database:', data.role);
+        } else {
+          console.warn('⚠ Failed to fetch profile from database, using fallback');
+          // Fallback: use metadata if profiles table fails
+          const fallbackRole = user.user_metadata?.role || user.app_metadata?.role;
+          if (fallbackRole === 'admin' || fallbackRole === 'kasir') {
+            setProfile({
+              id: userId,
+              role: fallbackRole,
+              full_name: user.user_metadata?.full_name || null
+            });
+            setRole(fallbackRole);
+            console.log('✓ Using fallback role from metadata:', fallbackRole);
+          } else {
+            setProfile(null);
+            setRole(null);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
         setProfile(null);
         setRole(null);
       }
@@ -52,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        await fetchProfile(session.user.id, session.user);
       }
       
       setLoading(false);
@@ -65,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        await fetchProfile(session.user.id, session.user);
       } else {
         setProfile(null);
         setRole(null);
