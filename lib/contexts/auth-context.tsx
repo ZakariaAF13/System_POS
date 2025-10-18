@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, createSupabaseClientWithKey } from '@/lib/supabase';
 
 interface Profile {
   id: string;
@@ -23,17 +23,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, scope }: { children: ReactNode; scope?: 'admin' | 'kasir' }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<'admin' | 'kasir' | null>(null);
   const [loading, setLoading] = useState(true);
+  const client = scope ? createSupabaseClientWithKey(`pos-${scope}`) : supabase;
 
   useEffect(() => {
     const fetchProfile = async (userId: string, user: User) => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await client
           .from('profiles')
           .select('id, role, full_name')
           .eq('id', userId)
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    client.auth.getSession().then(({ data: { session } }) => {
       setSession(session ?? null);
       setUser(session?.user ?? null);
       
@@ -88,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = client.auth.onAuthStateChange((_event, session) => {
       setSession(session ?? null);
       setUser(session?.user ?? null);
       
@@ -116,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) throw error as unknown as Error;
       return { error: null };
     } catch (error) {
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await client.auth.signUp({ email, password });
       if (error) throw error as unknown as Error;
       return { error: null };
     } catch (error) {
@@ -135,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await client.auth.signOut();
   };
 
   return (

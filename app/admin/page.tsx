@@ -29,6 +29,7 @@ import { usePathname } from 'next/navigation';
 import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useRouter } from 'next/navigation';
+import { AuthProvider } from '@/lib/contexts/auth-context';
 
 export default function AdminHomePage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -99,7 +100,8 @@ export default function AdminHomePage() {
   };
 
   return (
-    <AdminProtectedRoute>
+    <AuthProvider scope="admin">
+      <AdminProtectedRoute>
         <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
           <aside
             className={`fixed left-0 top-0 h-full w-64 ${
@@ -428,5 +430,6 @@ export default function AdminHomePage() {
           </div>
         </div>
       </AdminProtectedRoute>
+    </AuthProvider>
   );
 }
