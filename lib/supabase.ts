@@ -14,6 +14,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
 export function createSupabaseClientWithKey(storageKey: string) {
+  // Reuse per-key client in the same browser context to avoid multiple GoTrueClient instances
+  if (typeof window !== 'undefined') {
+    const g = window as unknown as { __SB_CLIENTS__?: Record<string, ReturnType<typeof createClient>> };
+    if (!g.__SB_CLIENTS__) g.__SB_CLIENTS__ = {};
+    const cached = g.__SB_CLIENTS__[storageKey];
+    if (cached) return cached;
+    const client = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+      auth: {
+        storageKey,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    });
+    g.__SB_CLIENTS__[storageKey] = client as any;
+    return client;
+  }
   return createClient(supabaseUrl || '', supabaseAnonKey || '', {
     auth: {
       storageKey,
