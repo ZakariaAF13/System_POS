@@ -57,27 +57,27 @@ export default function AdminHomePage() {
   ];
 
   const statsCards = [
-    { title: 'Total Sales Today', value: '$12,458', change: '+12.5%', trend: 'up', color: 'blue' },
-    { title: 'Monthly Total', value: '$348,920', change: '+8.2%', trend: 'up', color: 'green' },
-    { title: 'Yearly Total', value: '$4.2M', change: '+15.8%', trend: 'up', color: 'purple' },
+    { title: 'Total Sales Today', value: 'Rp 12.458', change: '+12.5%', trend: 'up', color: 'blue' },
+    { title: 'Monthly Total', value: 'Rp 348.920', change: '+8.2%', trend: 'up', color: 'green' },
+    { title: 'Yearly Total', value: 'Rp 4,2M', change: '+15.8%', trend: 'up', color: 'purple' },
     { title: 'Active Cashiers', value: '8', change: '2 online', trend: 'neutral', color: 'orange' },
-    { title: 'Estimated Profit', value: '$89,420', change: '+18.3%', trend: 'up', color: 'emerald' },
+    { title: 'Estimated Profit', value: 'Rp 89.420', change: '+18.3%', trend: 'up', color: 'emerald' },
   ];
 
   const topSellingProducts = [
-    { id: 1, name: 'Margherita Pizza', sales: 342, revenue: '$3,420', status: 'Popular', img: '🍕' },
-    { id: 2, name: 'Caesar Salad', sales: 289, revenue: '$2,312', status: 'Popular', img: '🥗' },
-    { id: 3, name: 'Grilled Salmon', sales: 256, revenue: '$5,120', status: 'Popular', img: '🐟' },
-    { id: 4, name: 'Beef Burger', sales: 234, revenue: '$2,808', status: 'Popular', img: '🍔' },
-    { id: 5, name: 'Pasta Carbonara', sales: 198, revenue: '$2,376', status: 'Popular', img: '🍝' },
+    { id: 1, name: 'Margherita Pizza', sales: 342, revenue: 'Rp 3.420', status: 'Popular', img: '🍕' },
+    { id: 2, name: 'Caesar Salad', sales: 289, revenue: 'Rp 2.312', status: 'Popular', img: '🥗' },
+    { id: 3, name: 'Grilled Salmon', sales: 256, revenue: 'Rp 5.120', status: 'Popular', img: '🐟' },
+    { id: 4, name: 'Beef Burger', sales: 234, revenue: 'Rp 2.808', status: 'Popular', img: '🍔' },
+    { id: 5, name: 'Pasta Carbonara', sales: 198, revenue: 'Rp 2.376', status: 'Popular', img: '🍝' },
   ];
 
   const leastSellingProducts = [
-    { id: 1, name: 'Escargot', sales: 12, revenue: '$240', status: 'Low Demand', img: '🐌' },
-    { id: 2, name: 'Caviar Platter', sales: 8, revenue: '$640', status: 'Low Demand', img: '🥄' },
-    { id: 3, name: 'Vegan Wrap', sales: 15, revenue: '$135', status: 'Low Demand', img: '🌯' },
-    { id: 4, name: 'Green Smoothie', sales: 23, revenue: '$138', status: 'Low Demand', img: '🥤' },
-    { id: 5, name: 'Tofu Stir Fry', sales: 28, revenue: '$252', status: 'Low Demand', img: '🥘' },
+    { id: 1, name: 'Escargot', sales: 12, revenue: 'Rp 240', status: 'Low Demand', img: '🐌' },
+    { id: 2, name: 'Caviar Platter', sales: 8, revenue: 'Rp 640', status: 'Low Demand', img: '🥄' },
+    { id: 3, name: 'Vegan Wrap', sales: 15, revenue: 'Rp 135', status: 'Low Demand', img: '🌯' },
+    { id: 4, name: 'Green Smoothie', sales: 23, revenue: 'Rp 138', status: 'Low Demand', img: '🥤' },
+    { id: 5, name: 'Tofu Stir Fry', sales: 28, revenue: 'Rp 252', status: 'Low Demand', img: '🥘' },
   ];
 
   const salesData = {
@@ -96,6 +96,9 @@ export default function AdminHomePage() {
     };
     return colors[color] || colors.blue;
   };
+
+  const formatCurrencyIDR = (amount: number) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
   return (
         <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
@@ -286,7 +289,7 @@ export default function AdminHomePage() {
                             style={{ height: `${height}%` }}
                           >
                             <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded">
-                              ${value.toLocaleString()}
+                              {formatCurrencyIDR(value)}
                             </div>
                           </div>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
