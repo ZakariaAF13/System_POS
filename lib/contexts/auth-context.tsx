@@ -67,25 +67,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session ?? null);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchProfile(session.user.id, session.user);
+        const fallbackRole = session.user.user_metadata?.role || session.user.app_metadata?.role;
+        if (fallbackRole === 'admin' || fallbackRole === 'kasir') {
+          setProfile({
+            id: session.user.id,
+            role: fallbackRole,
+            full_name: session.user.user_metadata?.full_name || null,
+          });
+          setRole(fallbackRole);
+        }
+        fetchProfile(session.user.id, session.user);
       }
-      
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session ?? null);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchProfile(session.user.id, session.user);
+        const fallbackRole = session.user.user_metadata?.role || session.user.app_metadata?.role;
+        if (fallbackRole === 'admin' || fallbackRole === 'kasir') {
+          setProfile({
+            id: session.user.id,
+            role: fallbackRole,
+            full_name: session.user.user_metadata?.full_name || null,
+          });
+          setRole(fallbackRole);
+        }
+        fetchProfile(session.user.id, session.user);
       } else {
         setProfile(null);
         setRole(null);

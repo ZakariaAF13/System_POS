@@ -14,9 +14,9 @@ export default function AdminLogin() {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && role === 'admin') {
-      router.replace('/admin');
-    }
+    if (!user) return;
+    if (role === 'admin') router.replace('/admin');
+    if (role === 'kasir') router.replace('/cashier');
   }, [user, role, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {

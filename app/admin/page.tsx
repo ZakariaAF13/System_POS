@@ -26,14 +26,25 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AuthProvider } from '@/lib/contexts/auth-context';
 import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
+import { useAuth } from '@/lib/contexts/auth-context';
+import { useRouter } from 'next/navigation';
 
 export default function AdminHomePage() {
   const [darkMode, setDarkMode] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'monthly' | 'yearly'>('daily');
   const pathname = usePathname();
+  const { signOut } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } finally {
+      router.replace('/admin');
+    }
+  };
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
@@ -88,8 +99,7 @@ export default function AdminHomePage() {
   };
 
   return (
-    <AuthProvider>
-      <AdminProtectedRoute>
+    <AdminProtectedRoute>
         <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
           <aside
             className={`fixed left-0 top-0 h-full w-64 ${
@@ -207,6 +217,7 @@ export default function AdminHomePage() {
                           <span className="text-sm">Profile</span>
                         </button>
                         <button
+                          onClick={handleLogout}
                           className={`w-full flex items-center gap-3 px-4 py-3 ${
                             darkMode ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-gray-50'
                           } transition-colors`}
@@ -417,6 +428,5 @@ export default function AdminHomePage() {
           </div>
         </div>
       </AdminProtectedRoute>
-    </AuthProvider>
   );
 }

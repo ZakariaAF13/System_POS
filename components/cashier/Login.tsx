@@ -3,13 +3,22 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { LogIn } from 'lucide-react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, role } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+    if (role === 'kasir') router.replace('/cashier');
+    if (role === 'admin') router.replace('/admin');
+  }, [user, role, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

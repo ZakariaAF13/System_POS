@@ -12,3 +12,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+
+export function createSupabaseClientWithKey(storageKey: string) {
+  return createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: {
+      storageKey,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+  });
+}
