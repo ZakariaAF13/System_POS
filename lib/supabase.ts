@@ -11,7 +11,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Cache default client to avoid multiple instances during HMR/StrictMode
+function getDefaultClient() {
+  if (typeof window !== 'undefined') {
+    const g = window as unknown as { __SB_CLIENTS__?: Record<string, ReturnType<typeof createClient>> };
+    if (!g.__SB_CLIENTS__) g.__SB_CLIENTS__ = {};
+    if (!g.__SB_CLIENTS__['default']) {
+      g.__SB_CLIENTS__['default'] = createClient(supabaseUrl || '', supabaseAnonKey || '');
+    }
+    return g.__SB_CLIENTS__['default'];
+  }
+  return createClient(supabaseUrl || '', supabaseAnonKey || '');
+}
+
+export const supabase = getDefaultClient();
 
 export function createSupabaseClientWithKey(storageKey: string) {
   // Reuse per-key client in the same browser context to avoid multiple GoTrueClient instances
