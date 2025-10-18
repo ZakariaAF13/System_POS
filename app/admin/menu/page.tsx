@@ -113,9 +113,8 @@ export default function MenuPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Kelola Menu</h1>
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Kelola Menu</h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">{error}</div>
@@ -230,7 +229,6 @@ export default function MenuPage() {
             </table>
           </div>
         </div>
-      </div>
-    </main>
+    </div>
   );
 }
