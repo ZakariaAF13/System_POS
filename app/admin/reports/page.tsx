@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AuthProvider } from '@/lib/contexts/auth-context';
-import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
 import { supabase } from '@/lib/supabase';
 
 interface OrderRow {
@@ -15,13 +13,7 @@ interface OrderRow {
 type Range = 'daily' | 'monthly' | 'yearly';
 
 export default function ReportsPage() {
-  return (
-    <AuthProvider>
-      <AdminProtectedRoute>
-        <ReportsContent />
-      </AdminProtectedRoute>
-    </AuthProvider>
-  );
+  return <ReportsContent />;
 }
 
 function ReportsContent() {
