@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createSupabaseClientWithKey } from '@/lib/supabase';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { uploadMenuImage } from '@/lib/menu-storage';
 
 type MenuItem = {
   id: string;
@@ -11,6 +12,7 @@ type MenuItem = {
   price: number;
   category: string;
   available: boolean;
+  image_url?: string | null;
 };
 
 export default function MenuPage() {
@@ -25,10 +27,15 @@ export default function MenuPage() {
     price: string;
     category: string;
     available: boolean;
-  }>({ name: '', description: '', price: '', category: '', available: true });
+    image_url?: string | null;
+  }>({ name: '', description: '', price: '', category: '', available: true, image_url: undefined });
   const [error, setError] = useState<string>('');
+  const [file, setFile] = useState<File | null>(null);
 
-  const resetForm = () => setForm({ name: '', description: '', price: '', category: '', available: true, id: undefined });
+  const resetForm = () => {
+    setForm({ name: '', description: '', price: '', category: '', available: true, id: undefined, image_url: undefined });
+    setFile(null);
+  };
 
   const fetchItems = async () => {
     try {
@@ -59,7 +66,9 @@ export default function MenuPage() {
       price: String(item.price),
       category: item.category,
       available: item.available,
+      image_url: item.image_url ?? undefined,
     });
+    setFile(null);
   };
 
   const onDelete = async (id: string) => {
@@ -81,12 +90,18 @@ export default function MenuPage() {
     setError('');
     try {
       setSaving(true);
+      let image_url: string | null | undefined = form.image_url ?? undefined;
+      if (file) {
+        image_url = await uploadMenuImage(file, form.id ?? null);
+      }
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
         price: Number(form.price),
         category: form.category.trim(),
         available: form.available,
+        image_url: image_url ?? null,
       };
       if (!payload.name || isNaN(payload.price) || !payload.category) {
         throw new Error('Nama, harga, dan kategori wajib diisi');
@@ -158,6 +173,18 @@ export default function MenuPage() {
             />
             <span>Tersedia</span>
           </label>
+          <div className="md:col-span-3 flex items-center gap-3">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="block w-full text-sm text-gray-700"
+            />
+            {form.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.image_url} alt="preview" className="w-16 h-16 object-cover rounded border" />
+            )}
+          </div>
           <div className="md:col-span-6 flex gap-2 justify-end">
             {form.id && (
               <button type="button" onClick={resetForm} className="px-4 py-2 border rounded">
@@ -205,7 +232,15 @@ export default function MenuPage() {
                 ) : (
                   items.map((item) => (
                     <tr key={item.id} className="border-b hover:bg-slate-50">
-                      <td className="p-3 font-medium">{item.name}</td>
+                      <td className="p-3 font-medium">
+                        <div className="flex items-center gap-3">
+                          {item.image_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image_url} alt={item.name} className="w-10 h-10 object-cover rounded border" />
+                          )}
+                          <span>{item.name}</span>
+                        </div>
+                      </td>
                       <td className="p-3 text-gray-600">{item.description}</td>
                       <td className="p-3">{item.category}</td>
                       <td className="p-3 text-right">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}</td>
@@ -232,3 +267,4 @@ export default function MenuPage() {
     </div>
   );
 }
+
