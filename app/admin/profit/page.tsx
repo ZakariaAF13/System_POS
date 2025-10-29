@@ -27,55 +27,55 @@ export default function ProfitPage() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Profit</h1>
+        <h1 className="text-3xl font-bold mb-6 text-foreground">Profit</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Pendapatan</div>
-            <div className="text-2xl font-bold mt-1">Rp {kpis.revenue.toLocaleString('id-ID')}</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Pendapatan</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">Rp {kpis.revenue.toLocaleString('id-ID')}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Harga Pokok Penjualan</div>
-            <div className="text-2xl font-bold mt-1">Rp {kpis.cogs.toLocaleString('id-ID')}</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Harga Pokok Penjualan</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">Rp {kpis.cogs.toLocaleString('id-ID')}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Biaya Operasional</div>
-            <div className="text-2xl font-bold mt-1">Rp {kpis.expenses.toLocaleString('id-ID')}</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Biaya Operasional</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">Rp {kpis.expenses.toLocaleString('id-ID')}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Laba Bersih</div>
-            <div className={`text-2xl font-bold mt-1 ${profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Laba Bersih</div>
+            <div className={`text-2xl font-bold mt-1 ${profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               Rp {profit.toLocaleString('id-ID')}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Ringkasan Bulanan</h2>
+        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h2 className="font-semibold text-foreground">Ringkasan Bulanan</h2>
           </div>
           <table className="min-w-full">
-            <thead className="bg-slate-50">
+            <thead className="bg-muted">
               <tr>
-                <th className="text-left p-3 text-sm font-medium text-gray-700">Bulan</th>
-                <th className="text-right p-3 text-sm font-medium text-gray-700">Pendapatan</th>
-                <th className="text-right p-3 text-sm font-medium text-gray-700">HPP</th>
-                <th className="text-right p-3 text-sm font-medium text-gray-700">Biaya</th>
-                <th className="text-right p-3 text-sm font-medium text-gray-700">Laba</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Bulan</th>
+                <th className="text-right p-3 text-sm font-medium text-muted-foreground">Pendapatan</th>
+                <th className="text-right p-3 text-sm font-medium text-muted-foreground">HPP</th>
+                <th className="text-right p-3 text-sm font-medium text-muted-foreground">Biaya</th>
+                <th className="text-right p-3 text-sm font-medium text-muted-foreground">Laba</th>
               </tr>
             </thead>
             <tbody>
               {monthly.map((m) => {
                 const p = m.revenue - m.cogs - m.expenses;
                 return (
-                  <tr key={m.month} className="border-t">
-                    <td className="p-3 text-sm text-gray-900">{m.month}</td>
+                  <tr key={m.month} className="border-t border-border">
+                    <td className="p-3 text-sm text-foreground">{m.month}</td>
                     <td className="p-3 text-sm text-right">Rp {m.revenue.toLocaleString('id-ID')}</td>
                     <td className="p-3 text-sm text-right">Rp {m.cogs.toLocaleString('id-ID')}</td>
                     <td className="p-3 text-sm text-right">Rp {m.expenses.toLocaleString('id-ID')}</td>
-                    <td className={`p-3 text-sm text-right ${p >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>Rp {p.toLocaleString('id-ID')}</td>
+                    <td className={`p-3 text-sm text-right ${p >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>Rp {p.toLocaleString('id-ID')}</td>
                   </tr>
                 );
               })}

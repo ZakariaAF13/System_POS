@@ -77,49 +77,49 @@ export default function QRTablesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">QR Tables</h1>
+          <h1 className="text-3xl font-bold text-foreground">QR Tables</h1>
           <button className="px-4 py-2 bg-slate-900 text-white rounded">Tambah Meja</button>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-card border border-border rounded-lg shadow-sm p-4 mb-6">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari meja (misal: A1)"
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((t) => (
-            <div key={t.id} className="bg-white rounded-lg shadow p-4">
+            <div key={t.id} className="bg-card border border-border rounded-lg shadow-sm p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-sm text-gray-500">Meja</div>
-                  <div className="text-2xl font-bold">{t.id}</div>
+                  <div className="text-sm text-muted-foreground">Meja</div>
+                  <div className="text-2xl font-bold text-foreground">{t.id}</div>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  t.status === 'available' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                  t.status === 'available' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
                 }`}>
                   {t.status === 'available' ? 'Tersedia' : 'Dipakai'}
                 </span>
               </div>
-              <div className="mt-2 text-sm text-gray-600">Kursi: {t.seats}</div>
-              <div className="mt-1 text-xs text-gray-500">Tipe: {t.type === 'meja_panjang' ? 'Meja Panjang' : t.type === '2_meja_pendek' ? '2 Meja Pendek' : '1 Meja Pendek'}</div>
+              <div className="mt-2 text-sm text-muted-foreground">Kursi: {t.seats}</div>
+              <div className="mt-1 text-xs text-muted-foreground">Tipe: {t.type === 'meja_panjang' ? 'Meja Panjang' : t.type === '2_meja_pendek' ? '2 Meja Pendek' : '1 Meja Pendek'}</div>
 
               <div className="mt-4 flex items-center justify-between gap-2">
-                <button className="px-3 py-1 border rounded" onClick={() => viewQR(t.id)}>Lihat QR</button>
-                <button className="px-3 py-1 border rounded" onClick={() => downloadQR(t.id)}>Unduh</button>
-                <button className="px-3 py-1 border rounded" onClick={() => openEdit(t.id)}>Edit</button>
+                <button className="px-3 py-1 border border-border rounded" onClick={() => viewQR(t.id)}>Lihat QR</button>
+                <button className="px-3 py-1 border border-border rounded" onClick={() => downloadQR(t.id)}>Unduh</button>
+                <button className="px-3 py-1 border border-border rounded" onClick={() => openEdit(t.id)}>Edit</button>
               </div>
             </div>
           ))}
 
           {filtered.length === 0 && (
-            <div className="col-span-full p-6 text-center bg-white rounded-lg shadow text-gray-500 text-sm">
+            <div className="col-span-full p-6 text-center bg-card border border-border rounded-lg shadow-sm text-muted-foreground text-sm">
               Tidak ada meja
             </div>
           )}
@@ -152,7 +152,7 @@ export default function QRTablesPage() {
                   min={1}
                   value={editSeats}
                   onChange={(e) => setEditSeats(Number(e.target.value))}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
                 />
               </div>
               <div>
@@ -160,7 +160,7 @@ export default function QRTablesPage() {
                 <select
                   value={editType}
                   onChange={(e) => setEditType(e.target.value as any)}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
                 >
                   <option value="meja_panjang">Meja Panjang</option>
                   <option value="2_meja_pendek">2 Meja Pendek</option>
@@ -168,7 +168,7 @@ export default function QRTablesPage() {
                 </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button className="px-3 py-2 border rounded" onClick={() => setEditOpen(false)}>Batal</button>
+                <button className="px-3 py-2 border border-border rounded" onClick={() => setEditOpen(false)}>Batal</button>
                 <button className="px-3 py-2 bg-slate-900 text-white rounded" onClick={saveEdit}>Simpan</button>
               </div>
             </div>

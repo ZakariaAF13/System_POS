@@ -30,38 +30,38 @@ export default function AnalyticsPage() {
   const maxWeekly = Math.max(...weekly, 1);
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Analytics</h1>
+        <h1 className="text-3xl font-bold mb-6 text-foreground">Analytics</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Pendapatan</div>
-            <div className="text-2xl font-bold mt-1">Rp {metrics.revenue.toLocaleString('id-ID')}</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Pendapatan</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">Rp {metrics.revenue.toLocaleString('id-ID')}</div>
             <div className="text-xs text-emerald-600 mt-2">+8.2% dari minggu lalu</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Jumlah Order</div>
-            <div className="text-2xl font-bold mt-1">{metrics.orders.toLocaleString('id-ID')}</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Jumlah Order</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">{metrics.orders.toLocaleString('id-ID')}</div>
             <div className="text-xs text-emerald-600 mt-2">+3.1% dari minggu lalu</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Rata-rata Order</div>
-            <div className="text-2xl font-bold mt-1">Rp {metrics.avgOrder.toLocaleString('id-ID')}</div>
-            <div className="text-xs text-gray-500 mt-2">stabil</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Rata-rata Order</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">Rp {metrics.avgOrder.toLocaleString('id-ID')}</div>
+            <div className="text-xs text-muted-foreground mt-2">stabil</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500">Returning Customer</div>
-            <div className="text-2xl font-bold mt-1">{(metrics.returningRate * 100).toFixed(0)}%</div>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <div className="text-sm text-muted-foreground">Returning Customer</div>
+            <div className="text-2xl font-bold mt-1 text-foreground">{(metrics.returningRate * 100).toFixed(0)}%</div>
             <div className="text-xs text-emerald-600 mt-2">+1.2 pt</div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-4 lg:col-span-2">
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4 lg:col-span-2">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Trend Order (7 hari)</h2>
-              <span className="text-sm text-gray-500">Mingguan</span>
+              <h2 className="font-semibold text-foreground">Trend Order (7 hari)</h2>
+              <span className="text-sm text-muted-foreground">Mingguan</span>
             </div>
             <div className="flex items-end gap-2 h-40">
               {weekly.map((v, i) => (
@@ -74,23 +74,23 @@ export default function AnalyticsPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-2 flex justify-between text-xs text-gray-500">
+            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
               {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((d) => (
                 <span key={d}>{d}</span>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="font-semibold mb-4">Menu Terlaris</h2>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+            <h2 className="font-semibold mb-4 text-foreground">Menu Terlaris</h2>
             <ul className="space-y-3">
               {topMenus.map((m) => (
                 <li key={m.name} className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium">{m.name}</div>
-                    <div className="text-xs text-gray-500">Terjual {m.sold.toLocaleString('id-ID')} porsi</div>
+                    <div className="font-medium text-foreground">{m.name}</div>
+                    <div className="text-xs text-muted-foreground">Terjual {m.sold.toLocaleString('id-ID')} porsi</div>
                   </div>
-                  <div className="text-sm font-semibold">Rp {m.revenue.toLocaleString('id-ID')}</div>
+                  <div className="text-sm font-semibold text-foreground">Rp {m.revenue.toLocaleString('id-ID')}</div>
                 </li>
               ))}
             </ul>
