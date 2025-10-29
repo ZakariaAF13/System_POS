@@ -32,6 +32,28 @@ export default function MenuPage() {
   const [error, setError] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
+  type AdminPromotion = {
+    id: string;
+    title: string;
+    description: string | null;
+    discount: number;
+    active: boolean;
+    image_url?: string | null;
+  };
+  const [promos, setPromos] = useState<AdminPromotion[]>([]);
+  const [loadingPromo, setLoadingPromo] = useState(true);
+  const [savingPromo, setSavingPromo] = useState(false);
+  const [formPromo, setFormPromo] = useState<{
+    id?: string;
+    title: string;
+    description: string;
+    discount: string;
+    active: boolean;
+    image_url?: string | null;
+  }>({ title: '', description: '', discount: '', active: true, image_url: undefined });
+  const [errorPromo, setErrorPromo] = useState<string>('');
+  const [filePromo, setFilePromo] = useState<File | null>(null);
+
   const resetForm = () => {
     setForm({ name: '', description: '', price: '', category: '', available: true, id: undefined, image_url: undefined });
     setFile(null);
@@ -57,6 +79,98 @@ export default function MenuPage() {
   useEffect(() => {
     fetchItems();
   }, []);
+
+  const fetchPromotions = async () => {
+    try {
+      setLoadingPromo(true);
+      const { data, error } = await supabase
+        .from('promotions')
+        .select('*')
+        .order('active', { ascending: false })
+        .order('title');
+      if (error) throw error;
+      setPromos((data as AdminPromotion[]) || []);
+    } catch (e: any) {
+      setErrorPromo(e.message || 'Gagal memuat data promo');
+    } finally {
+      setLoadingPromo(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPromotions();
+  }, []);
+
+  const resetPromoForm = () => {
+    setFormPromo({ id: undefined, title: '', description: '', discount: '', active: true, image_url: undefined });
+    setFilePromo(null);
+  };
+
+  const onEditPromo = (p: AdminPromotion) => {
+    setFormPromo({
+      id: p.id,
+      title: p.title,
+      description: p.description || '',
+      discount: String(p.discount),
+      active: p.active,
+      image_url: p.image_url ?? undefined,
+    });
+    setFilePromo(null);
+  };
+
+  const onDeletePromo = async (id: string) => {
+    if (!confirm('Hapus promo ini?')) return;
+    try {
+      setSavingPromo(true);
+      const { error } = await supabase.from('promotions').delete().eq('id', id);
+      if (error) throw error;
+      await fetchPromotions();
+    } catch (e: any) {
+      setErrorPromo(e.message || 'Gagal menghapus promo');
+    } finally {
+      setSavingPromo(false);
+    }
+  };
+
+  const onSubmitPromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorPromo('');
+    try {
+      setSavingPromo(true);
+      let image_url: string | null | undefined = formPromo.image_url ?? undefined;
+      if (filePromo) {
+        image_url = await uploadMenuImage(filePromo, formPromo.id ?? null);
+      }
+      const payload = {
+        title: formPromo.title.trim(),
+        description: formPromo.description.trim() || null,
+        discount: Number(formPromo.discount),
+        active: formPromo.active,
+        image_url: image_url ?? null,
+      };
+      if (!payload.title || isNaN(payload.discount)) {
+        throw new Error('Judul dan diskon wajib diisi');
+      }
+      if (formPromo.id) {
+        const { error } = await supabase
+          .from('promotions')
+          .update(payload)
+          .eq('id', formPromo.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('promotions')
+          .insert(payload);
+        if (error) throw error;
+      }
+      resetPromoForm();
+      await fetchPromotions();
+    } catch (e: any) {
+      setErrorPromo(e.message || 'Gagal menyimpan promo');
+    } finally {
+      setSavingPromo(false);
+    }
+  };
 
   const onEdit = (item: MenuItem) => {
     setForm({
@@ -128,24 +242,25 @@ export default function MenuPage() {
   };
 
   return (
+    <>
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Kelola Menu</h1>
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Kelola Menu</h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">{error}</div>
         )}
 
-        <form onSubmit={onSubmit} className="bg-white border rounded-xl p-4 mb-6 grid grid-cols-1 md:grid-cols-6 gap-3">
+        <form onSubmit={onSubmit} className="bg-card border border-border rounded-xl p-4 mb-6 grid grid-cols-1 md:grid-cols-6 gap-3 shadow-sm">
           <input
             placeholder="Nama Menu"
-            className="md:col-span-2 px-3 py-2 border rounded"
+            className="md:col-span-2 px-3 py-2 border border-border bg-background text-foreground rounded"
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             required
           />
           <input
             placeholder="Deskripsi"
-            className="md:col-span-2 px-3 py-2 border rounded"
+            className="md:col-span-2 px-3 py-2 border border-border bg-background text-foreground rounded"
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           />
@@ -153,14 +268,14 @@ export default function MenuPage() {
             placeholder="Harga"
             type="number"
             min="0"
-            className="px-3 py-2 border rounded"
+            className="px-3 py-2 border border-border bg-background text-foreground rounded"
             value={form.price}
             onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
             required
           />
           <input
             placeholder="Kategori"
-            className="px-3 py-2 border rounded"
+            className="px-3 py-2 border border-border bg-background text-foreground rounded"
             value={form.category}
             onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
             required
@@ -178,16 +293,16 @@ export default function MenuPage() {
               type="file"
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-gray-700"
+              className="block w-full text-sm text-muted-foreground"
             />
             {form.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.image_url} alt="preview" className="w-16 h-16 object-cover rounded border" />
+              <img src={form.image_url} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
             )}
           </div>
           <div className="md:col-span-6 flex gap-2 justify-end">
             {form.id && (
-              <button type="button" onClick={resetForm} className="px-4 py-2 border rounded">
+              <button type="button" onClick={resetForm} className="px-4 py-2 border border-border rounded">
                 Batal
               </button>
             )}
@@ -201,17 +316,17 @@ export default function MenuPage() {
           </div>
         </form>
 
-        <div className="bg-white border rounded-xl">
-          <div className="p-4 border-b flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Daftar Menu</h2>
-            <button onClick={resetForm} className="flex items-center gap-2 px-3 py-2 border rounded">
+        <div className="bg-card border border-border rounded-xl shadow-sm">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Daftar Menu</h2>
+            <button onClick={resetForm} className="flex items-center gap-2 px-3 py-2 border border-border rounded">
               <Plus className="w-4 h-4" /> Baru
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50">
+              <thead className="bg-muted">
+                <tr className="border-b border-border">
                   <th className="text-left p-3">Nama</th>
                   <th className="text-left p-3">Deskripsi</th>
                   <th className="text-left p-3">Kategori</th>
@@ -223,37 +338,37 @@ export default function MenuPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-6 text-center text-gray-500">Memuat...</td>
+                    <td colSpan={6} className="p-6 text-center text-muted-foreground">Memuat...</td>
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-6 text-center text-gray-500">Belum ada data</td>
+                    <td colSpan={6} className="p-6 text-center text-muted-foreground">Belum ada data</td>
                   </tr>
                 ) : (
                   items.map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-slate-50">
-                      <td className="p-3 font-medium">
+                    <tr key={item.id} className="border-b border-border hover:bg-muted/50">
+                      <td className="p-3 font-medium text-foreground">
                         <div className="flex items-center gap-3">
                           {item.image_url && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image_url} alt={item.name} className="w-10 h-10 object-cover rounded border" />
+                            <img src={item.image_url} alt={item.name} className="w-10 h-10 object-cover rounded border border-border" />
                           )}
                           <span>{item.name}</span>
                         </div>
                       </td>
-                      <td className="p-3 text-gray-600">{item.description}</td>
+                      <td className="p-3 text-muted-foreground">{item.description}</td>
                       <td className="p-3">{item.category}</td>
-                      <td className="p-3 text-right">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}</td>
+                      <td className="p-3 text-right text-foreground">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}</td>
                       <td className="p-3 text-center">
-                        <span className={`px-2 py-1 rounded text-xs ${item.available ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'}`}>
+                        <span className={`px-2 py-1 rounded text-xs ${item.available ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
                           {item.available ? 'Tersedia' : 'Tidak'}
                         </span>
                       </td>
                       <td className="p-3 text-right">
-                        <button onClick={() => onEdit(item)} className="inline-flex items-center gap-1 px-3 py-1 border rounded mr-2">
+                        <button onClick={() => onEdit(item)} className="inline-flex items-center gap-1 px-3 py-1 border border-border rounded mr-2">
                           <Pencil className="w-4 h-4" /> Edit
                         </button>
-                        <button disabled={saving} onClick={() => onDelete(item.id)} className="inline-flex items-center gap-1 px-3 py-1 border rounded text-red-600">
+                        <button disabled={saving} onClick={() => onDelete(item.id)} className="inline-flex items-center gap-1 px-3 py-1 border border-border rounded text-red-600">
                           <Trash2 className="w-4 h-4" /> Hapus
                         </button>
                       </td>
@@ -265,6 +380,136 @@ export default function MenuPage() {
           </div>
         </div>
     </div>
+
+    {/* Promotions Management */}
+    {errorPromo && (
+      <div className="max-w-6xl mx-auto mt-8 mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">{errorPromo}</div>
+    )}
+    <div className="max-w-6xl mx-auto mt-8">
+      <h2 className="text-2xl font-semibold mb-4 text-foreground">Kelola Promo</h2>
+      <form onSubmit={onSubmitPromo} className="bg-card border border-border rounded-xl p-4 mb-6 grid grid-cols-1 md:grid-cols-6 gap-3 shadow-sm">
+        <input
+          placeholder="Judul Promo"
+          className="md:col-span-2 px-3 py-2 border border-border bg-background text-foreground rounded"
+          value={formPromo.title}
+          onChange={(e) => setFormPromo((f) => ({ ...f, title: e.target.value }))}
+          required
+        />
+        <input
+          placeholder="Deskripsi"
+          className="md:col-span-2 px-3 py-2 border border-border bg-background text-foreground rounded"
+          value={formPromo.description}
+          onChange={(e) => setFormPromo((f) => ({ ...f, description: e.target.value }))}
+        />
+        <input
+          placeholder="Diskon (%)"
+          type="number"
+          min="0"
+          max="100"
+          className="px-3 py-2 border border-border bg-background text-foreground rounded"
+          value={formPromo.discount}
+          onChange={(e) => setFormPromo((f) => ({ ...f, discount: e.target.value }))}
+          required
+        />
+        <label className="flex items-center gap-2 md:col-span-1">
+          <input
+            type="checkbox"
+            checked={formPromo.active}
+            onChange={(e) => setFormPromo((f) => ({ ...f, active: e.target.checked }))}
+          />
+          <span>Aktif</span>
+        </label>
+        <div className="md:col-span-3 flex items-center gap-3">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFilePromo(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-muted-foreground"
+          />
+          {formPromo.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={formPromo.image_url as string} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
+          )}
+        </div>
+        <div className="md:col-span-6 flex gap-2 justify-end">
+          {formPromo.id && (
+            <button type="button" onClick={resetPromoForm} className="px-4 py-2 border border-border rounded">
+              Batal
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={savingPromo}
+            className="px-4 py-2 bg-slate-900 text-white rounded disabled:opacity-50"
+          >
+            {formPromo.id ? 'Simpan Perubahan' : 'Tambah Promo'}
+          </button>
+        </div>
+      </form>
+
+      <div className="bg-card border border-border rounded-xl shadow-sm">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">Daftar Promo</h3>
+          <button onClick={resetPromoForm} className="flex items-center gap-2 px-3 py-2 border border-border rounded">
+            <Plus className="w-4 h-4" /> Baru
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-muted">
+              <tr className="border-b border-border">
+                <th className="text-left p-3">Judul</th>
+                <th className="text-left p-3">Deskripsi</th>
+                <th className="text-right p-3">Diskon</th>
+                <th className="text-center p-3">Status</th>
+                <th className="text-right p-3">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingPromo ? (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground">Memuat...</td>
+                </tr>
+              ) : promos.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground">Belum ada data</td>
+                </tr>
+              ) : (
+                promos.map((p) => (
+                  <tr key={p.id} className="border-b border-border hover:bg-muted/50">
+                    <td className="p-3 font-medium text-foreground">
+                      <div className="flex items-center gap-3">
+                        {p.image_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.image_url} alt={p.title} className="w-10 h-10 object-cover rounded border border-border" />
+                        )}
+                        <span>{p.title}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{p.description}</td>
+                    <td className="p-3 text-right text-foreground">{p.discount}%</td>
+                    <td className="p-3 text-center">
+                      <span className={`px-2 py-1 rounded text-xs ${p.active ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+                        {p.active ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <button onClick={() => onEditPromo(p)} className="inline-flex items-center gap-1 px-3 py-1 border border-border rounded mr-2">
+                        <Pencil className="w-4 h-4" /> Edit
+                      </button>
+                      <button disabled={savingPromo} onClick={() => onDeletePromo(p.id)} className="inline-flex items-center gap-1 px-3 py-1 border border-border rounded text-red-600">
+                        <Trash2 className="w-4 h-4" /> Hapus
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </>
   );
 }
 

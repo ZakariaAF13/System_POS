@@ -55,7 +55,7 @@ function AdminShell({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-800' : 'bg-gray-50'}`}>
       <aside
         className={`fixed left-0 top-0 h-full w-64 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'

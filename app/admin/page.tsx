@@ -39,6 +39,24 @@ export default function AdminHomePage() {
     yearly: [145000, 182000, 168000, 225000, 198000, 248000, 235000],
   } as const;
 
+  const cashiersToday = [
+    { id: 'K001', name: 'Rani', loginAt: '08:05', status: 'online' as const },
+    { id: 'K002', name: 'Budi', loginAt: '09:10', status: 'online' as const },
+    { id: 'K003', name: 'Sari', loginAt: '07:50', status: 'offline' as const },
+  ];
+
+  const shifts = [
+    { id: 'K001', name: 'Rani', shift: 'Pagi', start: '08:00', end: '16:00', hours: 8, active: true },
+    { id: 'K002', name: 'Budi', shift: 'Siang', start: '12:00', end: '20:00', hours: 8, active: false },
+    { id: 'K003', name: 'Sari', shift: 'Pagi', start: '08:00', end: '16:00', hours: 8, active: false },
+  ];
+
+  const activityLog = [
+    { id: 'A-10021', type: 'cancel' as const, cashier: 'Rani', ref: 'ORD-2391', amount: 0, at: '10:12', note: 'Transaksi dibatalkan' },
+    { id: 'A-10022', type: 'refund' as const, cashier: 'Budi', ref: 'ORD-2395', amount: 25000, at: '11:03', note: 'Refund sebagian' },
+    { id: 'A-10023', type: 'discount' as const, cashier: 'Rani', ref: 'ORD-2398', amount: 10000, at: '11:25', note: 'Diskon member' },
+  ];
+
   const getColorClass = (color: string) => {
     const colors: Record<string, string> = {
       blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300',
@@ -266,6 +284,98 @@ export default function AdminHomePage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
+        <div className="xl:col-span-1 bg-card border border-border rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-foreground mb-4">Kasir yang Login Hari Ini</h3>
+          <ul className="space-y-3">
+            {cashiersToday.map((c) => (
+              <li key={c.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-red-600 text-white flex items-center justify-center font-semibold">
+                    {c.name.slice(0,1)}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">Login {c.loginAt}</div>
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${c.status === 'online' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+                  {c.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="xl:col-span-2 bg-card border border-border rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-foreground mb-4">Shift & Jam Kerja Kasir</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-muted">
+                <tr className="border-b border-border">
+                  <th className="text-left p-3">Kasir</th>
+                  <th className="text-left p-3">Shift</th>
+                  <th className="text-left p-3">Mulai</th>
+                  <th className="text-left p-3">Selesai</th>
+                  <th className="text-right p-3">Jam</th>
+                  <th className="text-right p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shifts.map((s) => (
+                  <tr key={s.id} className="border-b border-border">
+                    <td className="p-3 text-foreground">{s.name}</td>
+                    <td className="p-3 text-muted-foreground">{s.shift}</td>
+                    <td className="p-3 text-muted-foreground">{s.start}</td>
+                    <td className="p-3 text-muted-foreground">{s.end}</td>
+                    <td className="p-3 text-right text-foreground">{s.hours}</td>
+                    <td className="p-3 text-right">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${s.active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+                        {s.active ? 'Aktif' : 'Selesai'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-6 shadow-sm mt-8">
+        <h3 className="text-lg font-bold text-foreground mb-4">Log Aktivitas</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-muted">
+              <tr className="border-b border-border">
+                <th className="text-left p-3">Waktu</th>
+                <th className="text-left p-3">Kasir</th>
+                <th className="text-left p-3">Tipe</th>
+                <th className="text-left p-3">Referensi</th>
+                <th className="text-right p-3">Jumlah</th>
+                <th className="text-left p-3">Catatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activityLog.map((a) => (
+                <tr key={a.id} className="border-b border-border">
+                  <td className="p-3 text-muted-foreground">{a.at}</td>
+                  <td className="p-3 text-foreground">{a.cashier}</td>
+                  <td className="p-3">
+                    <span className={`${a.type === 'cancel' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' : a.type === 'refund' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'} px-2 py-1 rounded text-xs font-medium` }>
+                      {a.type}
+                    </span>
+                  </td>
+                  <td className="p-3 text-muted-foreground">{a.ref}</td>
+                  <td className="p-3 text-right text-foreground">{a.amount > 0 ? `Rp ${a.amount.toLocaleString('id-ID')}` : '-'}</td>
+                  <td className="p-3 text-muted-foreground">{a.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
