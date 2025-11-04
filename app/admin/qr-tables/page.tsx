@@ -28,6 +28,12 @@ export default function QRTablesPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editSeats, setEditSeats] = useState<number>(2);
   const [editType, setEditType] = useState<'meja_panjang' | '2_meja_pendek' | '1_meja_pendek'>('1_meja_pendek');
+  const [addOpen, setAddOpen] = useState(false);
+  const [newId, setNewId] = useState('');
+  const [newSeats, setNewSeats] = useState<number>(2);
+  const [newType, setNewType] = useState<'meja_panjang' | '2_meja_pendek' | '1_meja_pendek'>('1_meja_pendek');
+  const [newStatus, setNewStatus] = useState<'available' | 'occupied'>('available');
+  const [addError, setAddError] = useState<string>('');
 
   const filtered = tables.filter((t) => t.id.toLowerCase().includes(query.toLowerCase()));
 
@@ -76,12 +82,36 @@ export default function QRTablesPage() {
     setEditOpen(false);
   };
 
+  const openAdd = () => {
+    setNewId('');
+    setNewSeats(2);
+    setNewType('1_meja_pendek');
+    setNewStatus('available');
+    setAddError('');
+    setAddOpen(true);
+  };
+
+  const saveAdd = () => {
+    const id = newId.trim().toUpperCase();
+    if (!id) {
+      setAddError('ID meja wajib diisi');
+      return;
+    }
+    const exists = tables.some((t) => t.id === id);
+    if (exists) {
+      setAddError('ID meja sudah digunakan');
+      return;
+    }
+    setTables((prev) => [...prev, { id, seats: Math.max(1, Number(newSeats) || 1), status: newStatus, type: newType }]);
+    setAddOpen(false);
+  };
+
   return (
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-foreground">QR Tables</h1>
-          <button className="px-4 py-2 bg-slate-900 text-white rounded">Tambah Meja</button>
+          <button className="px-4 py-2 bg-slate-900 text-white rounded" onClick={openAdd}>Tambah Meja</button>
         </div>
 
         <div className="bg-card border border-border rounded-lg shadow-sm p-4 mb-6">
@@ -170,6 +200,63 @@ export default function QRTablesPage() {
               <div className="flex justify-end gap-2 pt-2">
                 <button className="px-3 py-2 border border-border rounded" onClick={() => setEditOpen(false)}>Batal</button>
                 <button className="px-3 py-2 bg-slate-900 text-white rounded" onClick={saveEdit}>Simpan</button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Tambah Meja</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">ID Meja</label>
+                <input
+                  value={newId}
+                  onChange={(e) => { setNewId(e.target.value); setAddError(''); }}
+                  placeholder="Contoh: A3"
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                />
+                {addError && <p className="mt-1 text-sm text-red-600">{addError}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Jumlah Kursi</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={newSeats}
+                  onChange={(e) => setNewSeats(Number(e.target.value))}
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Tipe Meja</label>
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value as any)}
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                >
+                  <option value="meja_panjang">Meja Panjang</option>
+                  <option value="2_meja_pendek">2 Meja Pendek</option>
+                  <option value="1_meja_pendek">1 Meja Pendek</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value as any)}
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                >
+                  <option value="available">Tersedia</option>
+                  <option value="occupied">Dipakai</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button className="px-3 py-2 border border-border rounded" onClick={() => setAddOpen(false)}>Batal</button>
+                <button className="px-3 py-2 bg-slate-900 text-white rounded" onClick={saveAdd}>Simpan</button>
               </div>
             </div>
           </DialogContent>
