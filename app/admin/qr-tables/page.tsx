@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { supabase } from '@/lib/supabase';
 
 export default function QRTablesPage() {
   const [query, setQuery] = useState('');
@@ -34,6 +35,24 @@ export default function QRTablesPage() {
   const [newType, setNewType] = useState<'meja_panjang' | '2_meja_pendek' | '1_meja_pendek'>('1_meja_pendek');
   const [newStatus, setNewStatus] = useState<'available' | 'occupied'>('available');
   const [addError, setAddError] = useState<string>('');
+
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      const { data, error } = await supabase.from('tables').select('table_number').order('table_number');
+      if (error) return;
+      if (ignore) return;
+      const mapped = (data || []).map((t: any) => ({
+        id: String(t.table_number || '').toUpperCase(),
+        seats: 2,
+        status: 'available' as const,
+        type: '1_meja_pendek' as const,
+      }));
+      if (mapped.length) setTables(mapped);
+    };
+    load();
+    return () => { ignore = true; };
+  }, []);
 
   const filtered = tables.filter((t) => t.id.toLowerCase().includes(query.toLowerCase()));
 
@@ -91,7 +110,7 @@ export default function QRTablesPage() {
     setAddOpen(true);
   };
 
-  const saveAdd = () => {
+  const saveAdd = async () => {
     const id = newId.trim().toUpperCase();
     if (!id) {
       setAddError('ID meja wajib diisi');
@@ -100,6 +119,11 @@ export default function QRTablesPage() {
     const exists = tables.some((t) => t.id === id);
     if (exists) {
       setAddError('ID meja sudah digunakan');
+      return;
+    }
+    const { error } = await supabase.from('tables').insert({ table_number: id });
+    if (error) {
+      setAddError('Gagal menyimpan meja');
       return;
     }
     setTables((prev) => [...prev, { id, seats: Math.max(1, Number(newSeats) || 1), status: newStatus, type: newType }]);
