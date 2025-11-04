@@ -1,20 +1,35 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function UsersPage() {
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<'all' | 'admin' | 'kasir'>('all');
+  const [users, setUsers] = useState<Array<{ id: string; name: string; email: string; role: 'admin' | 'kasir'; status: string }>>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [newRole, setNewRole] = useState<'admin' | 'kasir'>('kasir');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  const users = useMemo(
-    () => [
-      { id: 'U001', name: 'Ayu Lestari', email: 'ayu@example.com', role: 'admin', status: 'active' },
-      { id: 'U002', name: 'Bima Pratama', email: 'bima@example.com', role: 'kasir', status: 'active' },
-      { id: 'U003', name: 'Citra Dewi', email: 'citra@example.com', role: 'kasir', status: 'suspended' },
-      { id: 'U004', name: 'Dika Putra', email: 'dika@example.com', role: 'admin', status: 'active' },
-    ],
-    []
-  );
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/admin/users', { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Gagal memuat users');
+        if (!ignore) setUsers(json.users || []);
+      } catch (_e) {
+        if (!ignore) setUsers([]);
+      }
+    };
+    load();
+    return () => { ignore = true; };
+  }, []);
 
   const filtered = users.filter((u) => {
     const matchQuery = `${u.name} ${u.email}`.toLowerCase().includes(query.toLowerCase());
@@ -27,7 +42,7 @@ export default function UsersPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-foreground">Users</h1>
-          <button className="px-4 py-2 bg-slate-900 text-white rounded">Tambah User</button>
+          <button className="px-4 py-2 bg-slate-900 text-white rounded" onClick={() => { setFullName(''); setEmail(''); setPassword(''); setNewRole('kasir'); setError(''); setAddOpen(true); }}>Tambah User</button>
         </div>
 
         <div className="bg-card border border-border rounded-lg shadow-sm p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -88,6 +103,84 @@ export default function UsersPage() {
             </tbody>
           </table>
         </div>
+
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Tambah User</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
+                <input
+                  value={fullName}
+                  onChange={(e) => { setFullName(e.target.value); setError(''); }}
+                  placeholder="Contoh: Budi Santoso"
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  placeholder="nama@email.com"
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as any)}
+                  className="w-full border border-border bg-background text-foreground rounded px-3 py-2"
+                >
+                  <option value="kasir">Kasir</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <button className="px-3 py-2 border border-border rounded" onClick={() => setAddOpen(false)}>Batal</button>
+                <button
+                  className="px-3 py-2 bg-slate-900 text-white rounded disabled:opacity-50"
+                  disabled={saving}
+                  onClick={async () => {
+                    if (!email.trim() || !password.trim()) { setError('Email dan password wajib diisi'); return; }
+                    setSaving(true);
+                    try {
+                      const res = await fetch('/api/admin/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, full_name: fullName, role: newRole }),
+                      });
+                      const json = await res.json();
+                      if (!res.ok) throw new Error(json.error || 'Gagal membuat user');
+                      setUsers((prev) => [json.user, ...prev]);
+                      setAddOpen(false);
+                    } catch (e: any) {
+                      setError(e.message || 'Gagal membuat user');
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </main>
   );
