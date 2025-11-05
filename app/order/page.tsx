@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
-import { mockMenuItems, mockPromotions } from '@/lib/data/mock-data';
+import { supabase } from '@/lib/supabase';
+import { MenuItem, Promotion } from '@/lib/types';
 import { PromotionsCarousel } from '@/components/order/promotions-carousel';
 import { PromotionsBanner } from '@/components/order/PromotionsBanner';
 import { MenuCard } from '@/components/order/menu-card';
@@ -23,6 +24,9 @@ function OrderPageContent() {
   const [tableId, setTableId] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'menu' | 'promo' | 'cart'>('menu');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [loading, setLoading] = useState(true);
   const { addItem, setTableId: setCartTableId } = useCartStore();
   const { t } = useLanguage();
 
@@ -33,6 +37,97 @@ function OrderPageContent() {
       setCartTableId(tableIdParam);
     }
   }, [searchParams, setCartTableId]);
+
+  // Fetch menu items from Supabase
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*')
+          .eq('available', true)
+          .order('category')
+          .order('name');
+        
+        if (error) throw error;
+        
+        // Map database fields to MenuItem type
+        const items: MenuItem[] = (data || []).map((item) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          image: item.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+          category: item.category,
+          available: item.available,
+        }));
+        
+        setMenuItems(items);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('menu_items-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+        fetchMenuItems();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Fetch promotions from Supabase
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('promotions')
+          .select('*')
+          .eq('active', true)
+          .order('title');
+        
+        if (error) throw error;
+        
+        // Map database fields to Promotion type
+        const promos: Promotion[] = (data || []).map((promo) => ({
+          id: promo.id,
+          title: promo.title,
+          description: promo.description || '',
+          image: promo.image_url || 'https://images.pexels.com/photos/2433979/pexels-photo-2433979.jpeg',
+          discount: promo.discount,
+          active: promo.active,
+        }));
+        
+        setPromotions(promos);
+      } catch (error) {
+        console.error('Error fetching promotions:', error);
+      }
+    };
+
+    fetchPromotions();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('promotions-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => {
+        fetchPromotions();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   if (!tableId) {
     return (
@@ -48,10 +143,10 @@ function OrderPageContent() {
     );
   }
 
-  const categories = ['all', ...Array.from(new Set(mockMenuItems.map((item) => item.category)))];
+  const categories = ['all', ...Array.from(new Set(menuItems.map((item) => item.category)))];
   const filteredMenuItems = selectedCategory === 'all'
-    ? mockMenuItems
-    : mockMenuItems.filter((item) => item.category === selectedCategory);
+    ? menuItems
+    : menuItems.filter((item) => item.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,7 +176,14 @@ function OrderPageContent() {
             <div className="md:hidden">
               {activeSection === 'menu' && (
                 <div>
-                  <PromotionsCarousel promotions={mockPromotions} />
+                  {loading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading menu...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <PromotionsCarousel promotions={promotions} />
 
                   <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
                     <TabsList className="w-full justify-start overflow-x-auto">
@@ -93,11 +195,19 @@ function OrderPageContent() {
                     </TabsList>
                   </Tabs>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {filteredMenuItems.map((item) => (
-                      <MenuCard key={item.id} item={item} onAddToCart={addItem} />
-                    ))}
-                  </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {filteredMenuItems.length > 0 ? (
+                          filteredMenuItems.map((item) => (
+                            <MenuCard key={item.id} item={item} onAddToCart={addItem} />
+                          ))
+                        ) : (
+                          <div className="col-span-2 text-center py-8 text-muted-foreground">
+                            {t('common.noItems') || 'Belum ada menu tersedia'}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -105,9 +215,15 @@ function OrderPageContent() {
                 <div>
                   <h2 className="text-2xl font-bold mb-6">{t('promo.specialPromo')}</h2>
                   <div className="space-y-4">
-                    {mockPromotions.map((promo) => (
-                      <PromotionsCarousel key={promo.id} promotions={[promo]} />
-                    ))}
+                    {promotions.length > 0 ? (
+                      promotions.map((promo) => (
+                        <PromotionsCarousel key={promo.id} promotions={[promo]} />
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {t('common.noPromos') || 'Belum ada promo tersedia'}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -118,7 +234,14 @@ function OrderPageContent() {
             <div className="hidden md:block">
               {activeSection === 'menu' && (
                 <div>
-                  <PromotionsCarousel promotions={mockPromotions} />
+                  {loading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading menu...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <PromotionsCarousel promotions={promotions} />
 
                   <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
                     <TabsList>
@@ -130,11 +253,19 @@ function OrderPageContent() {
                     </TabsList>
                   </Tabs>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {filteredMenuItems.map((item) => (
-                      <MenuCard key={item.id} item={item} onAddToCart={addItem} />
-                    ))}
-                  </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {filteredMenuItems.length > 0 ? (
+                          filteredMenuItems.map((item) => (
+                            <MenuCard key={item.id} item={item} onAddToCart={addItem} />
+                          ))
+                        ) : (
+                          <div className="col-span-2 text-center py-8 text-muted-foreground">
+                            {t('common.noItems') || 'Belum ada menu tersedia'}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -142,9 +273,15 @@ function OrderPageContent() {
                 <div>
                   <h2 className="text-2xl font-bold mb-6">{t('promo.specialPromo')}</h2>
                   <div className="space-y-4">
-                    {mockPromotions.map((promo) => (
-                      <PromotionsCarousel key={promo.id} promotions={[promo]} />
-                    ))}
+                    {promotions.length > 0 ? (
+                      promotions.map((promo) => (
+                        <PromotionsCarousel key={promo.id} promotions={[promo]} />
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {t('common.noPromos') || 'Belum ada promo tersedia'}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
