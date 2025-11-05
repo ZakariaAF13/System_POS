@@ -9,6 +9,7 @@ import { AlertCircle } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
 import { supabase } from '@/lib/supabase';
 import { MenuItem, Promotion } from '@/lib/types';
+import { normalizeStorageUrl } from '@/lib/menu-storage';
 import { PromotionsCarousel } from '@/components/order/promotions-carousel';
 import { PromotionsBanner } from '@/components/order/PromotionsBanner';
 import { MenuCard } from '@/components/order/menu-card';
@@ -58,7 +59,7 @@ function OrderPageContent() {
           name: item.name,
           description: item.description || '',
           price: item.price,
-          image: item.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+          image: normalizeStorageUrl(item.image_url) || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
           category: item.category,
           available: item.available,
         }));

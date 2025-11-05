@@ -2,13 +2,20 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 function getAdminClient() {
-  const url = process.env.SUPABASE_URL as string | undefined;
+  // Support both SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL
+  const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) as string | undefined;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
+  
   if (!url || !serviceKey) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    console.error('Missing Supabase credentials:', { hasUrl: !!url, hasKey: !!serviceKey });
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables');
   }
+  
   return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
+    auth: { 
+      autoRefreshToken: false, 
+      persistSession: false 
+    },
   });
 }
 
