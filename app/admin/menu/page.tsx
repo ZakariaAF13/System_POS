@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createSupabaseClientWithKey } from '@/lib/supabase';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { uploadMenuImage } from '@/lib/menu-storage';
+import { uploadMenuImage, normalizeStorageUrl } from '@/lib/menu-storage';
 
 type MenuItem = {
   id: string;
@@ -297,7 +297,7 @@ export default function MenuPage() {
             />
             {form.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.image_url} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
+              <img src={normalizeStorageUrl(form.image_url) || ''} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
             )}
           </div>
           <div className="md:col-span-6 flex gap-2 justify-end">
@@ -351,7 +351,7 @@ export default function MenuPage() {
                         <div className="flex items-center gap-3">
                           {item.image_url && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image_url} alt={item.name} className="w-10 h-10 object-cover rounded border border-border" />
+                            <img src={normalizeStorageUrl(item.image_url) || ''} alt={item.name} className="w-10 h-10 object-cover rounded border border-border" />
                           )}
                           <span>{item.name}</span>
                         </div>
@@ -428,7 +428,7 @@ export default function MenuPage() {
           />
           {formPromo.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={formPromo.image_url as string} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
+            <img src={normalizeStorageUrl(formPromo.image_url) || ''} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
           )}
         </div>
         <div className="md:col-span-6 flex gap-2 justify-end">
@@ -481,7 +481,7 @@ export default function MenuPage() {
                       <div className="flex items-center gap-3">
                         {p.image_url && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.image_url} alt={p.title} className="w-10 h-10 object-cover rounded border border-border" />
+                          <img src={normalizeStorageUrl(p.image_url) || ''} alt={p.title} className="w-10 h-10 object-cover rounded border border-border" />
                         )}
                         <span>{p.title}</span>
                       </div>

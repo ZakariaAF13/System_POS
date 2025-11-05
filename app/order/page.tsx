@@ -104,7 +104,7 @@ function OrderPageContent() {
           id: promo.id,
           title: promo.title,
           description: promo.description || '',
-          image: promo.image_url || 'https://images.pexels.com/photos/2433979/pexels-photo-2433979.jpeg',
+          image: normalizeStorageUrl(promo.image_url) || 'https://images.pexels.com/photos/2433979/pexels-photo-2433979.jpeg',
           discount: promo.discount,
           active: promo.active,
         }));

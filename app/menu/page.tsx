@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { normalizeStorageUrl } from '@/lib/menu-storage';
 
 type MenuItem = {
   id: string;
@@ -49,7 +50,7 @@ export default function UserMenuPage() {
               <div key={m.id} className="bg-white rounded-lg shadow p-4">
                 {m.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.image_url} alt={m.name} className="w-full h-40 object-cover rounded mb-3" />
+                  <img src={normalizeStorageUrl(m.image_url) || ''} alt={m.name} className="w-full h-40 object-cover rounded mb-3" />
                 )}
                 <div className="font-semibold text-lg">{m.name}</div>
                 {m.description && <div className="text-sm text-gray-600 mt-1">{m.description}</div>}
