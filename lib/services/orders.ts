@@ -55,8 +55,19 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 export async function getActivePromotions(): Promise<Promotion[]> {
   const { data, error } = await supabase
     .from('promotions')
-    .select('id, title, description, image, discount, active')
+    .select('id, title, description, image_url, discount, active')
     .eq('active', true);
   if (error) throw error;
-  return (data ?? []) as Promotion[];
+  
+  // Map database fields to Promotion type
+  const promotions: Promotion[] = (data ?? []).map((promo) => ({
+    id: promo.id,
+    title: promo.title,
+    description: promo.description || '',
+    image: promo.image_url || 'https://images.pexels.com/photos/2433979/pexels-photo-2433979.jpeg',
+    discount: promo.discount,
+    active: promo.active,
+  }));
+  
+  return promotions;
 }
