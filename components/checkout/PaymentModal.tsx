@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,6 +19,26 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
   const [isProcessing, setIsProcessing] = useState(false);
   const [snapToken, setSnapToken] = useState<string | null>(null);
   const functionsBase = process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_URL || '';
+
+  // Ensure Midtrans Snap.js is loaded when the modal opens (works for both checkout and cashier flows)
+  useEffect(() => {
+    if (!open) return;
+    const scriptId = 'midtrans-snap-script';
+    if (document.getElementById(scriptId)) return;
+
+    const env = process.env.NEXT_PUBLIC_MIDTRANS_ENV || 'sandbox';
+    const snapSrc = env === 'production'
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js';
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = snapSrc;
+    script.async = true;
+    script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
+    document.body.appendChild(script);
+    // Do not remove on close to allow reuse across openings
+  }, [open]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -73,6 +93,9 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
               setIsProcessing(false);
             }
           });
+        } else {
+          console.warn('Midtrans Snap.js is not loaded yet. Please try again.');
+          setIsProcessing(false);
         }
       }
     } catch (error) {
