@@ -11,15 +11,34 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// Global client cache to prevent multiple GoTrueClient instances
+type ClientCache = {
+  __SB_CLIENTS__?: Record<string, ReturnType<typeof createClient>>;
+  __SB_WARNED__?: boolean;
+};
+
+function getClientCache(): ClientCache {
+  if (typeof window !== 'undefined') {
+    return window as unknown as ClientCache;
+  }
+  return {};
+}
+
 // Cache default client to avoid multiple instances during HMR/StrictMode
 function getDefaultClient() {
+  const cache = getClientCache();
   if (typeof window !== 'undefined') {
-    const g = window as unknown as { __SB_CLIENTS__?: Record<string, ReturnType<typeof createClient>> };
-    if (!g.__SB_CLIENTS__) g.__SB_CLIENTS__ = {};
-    if (!g.__SB_CLIENTS__['default']) {
-      g.__SB_CLIENTS__['default'] = createClient(supabaseUrl || '', supabaseAnonKey || '');
+    if (!cache.__SB_CLIENTS__) cache.__SB_CLIENTS__ = {};
+    if (!cache.__SB_CLIENTS__['default']) {
+      cache.__SB_CLIENTS__['default'] = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+        auth: {
+          detectSessionInUrl: false, // Disable to avoid multiple warnings
+          persistSession: true,
+          autoRefreshToken: true,
+        },
+      });
     }
-    return g.__SB_CLIENTS__['default'];
+    return cache.__SB_CLIENTS__['default'];
   }
   return createClient(supabaseUrl || '', supabaseAnonKey || '');
 }
@@ -28,20 +47,28 @@ export const supabase = getDefaultClient();
 
 export function createSupabaseClientWithKey(storageKey: string) {
   // Reuse per-key client in the same browser context to avoid multiple GoTrueClient instances
+  const cache = getClientCache();
   if (typeof window !== 'undefined') {
-    const g = window as unknown as { __SB_CLIENTS__?: Record<string, ReturnType<typeof createClient>> };
-    if (!g.__SB_CLIENTS__) g.__SB_CLIENTS__ = {};
-    const cached = g.__SB_CLIENTS__[storageKey];
+    if (!cache.__SB_CLIENTS__) cache.__SB_CLIENTS__ = {};
+    const cached = cache.__SB_CLIENTS__[storageKey];
     if (cached) return cached;
+    
     const client = createClient(supabaseUrl || '', supabaseAnonKey || '', {
       auth: {
         storageKey,
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: false, // Disable to avoid warnings
       },
     });
-    g.__SB_CLIENTS__[storageKey] = client as any;
+    cache.__SB_CLIENTS__[storageKey] = client as any;
+    
+    // Log info only once
+    if (!cache.__SB_WARNED__) {
+      console.log(`✓ Supabase client initialized with storage key: ${storageKey}`);
+      cache.__SB_WARNED__ = true;
+    }
+    
     return client;
   }
   return createClient(supabaseUrl || '', supabaseAnonKey || '', {
@@ -49,7 +76,7 @@ export function createSupabaseClientWithKey(storageKey: string) {
       storageKey,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false,
     },
   });
 }

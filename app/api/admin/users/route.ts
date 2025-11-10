@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Cache admin client to avoid multiple GoTrueClient instances
+let cachedAdminClient: ReturnType<typeof createClient> | null = null;
+
 function getAdminClient() {
+  if (cachedAdminClient) {
+    return cachedAdminClient;
+  }
+  
   // Support both SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL
   const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) as string | undefined;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
@@ -11,12 +18,14 @@ function getAdminClient() {
     throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables');
   }
   
-  return createClient(url, serviceKey, {
+  cachedAdminClient = createClient(url, serviceKey, {
     auth: { 
       autoRefreshToken: false, 
       persistSession: false 
     },
   });
+  
+  return cachedAdminClient;
 }
 
 export async function GET() {

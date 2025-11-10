@@ -113,7 +113,7 @@ export function AuthProvider({ children, scope }: { children: ReactNode; scope?:
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [client]);
 
   const signIn = async (email: string, password: string) => {
     try {
