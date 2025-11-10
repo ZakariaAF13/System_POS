@@ -1,10 +1,11 @@
-import { supabase } from '@/lib/supabase';
+import { supabase as defaultSupabase } from '@/lib/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Normalize storage URL to ensure it has /public/ segment for public buckets
  * Validates URLs to prevent 400 errors from invalid image paths
  */
-export function normalizeStorageUrl(url: string | null | undefined): string | null {
+export function normalizeStorageUrl(url: string | null | undefined, client: SupabaseClient = defaultSupabase): string | null {
   if (!url) return null;
   
   // If already has /public/, validate it's complete
@@ -16,7 +17,7 @@ export function normalizeStorageUrl(url: string | null | undefined): string | nu
     // If incomplete, try to extract path after /public/
     const match = url.match(/\/storage\/v1\/object\/public\/(.+)$/);
     if (match && match[1]) {
-      const { data } = supabase.storage.from('menu-images').getPublicUrl(match[1]);
+      const { data } = client.storage.from('menu-images').getPublicUrl(match[1]);
       return data.publicUrl;
     }
   }
@@ -31,7 +32,7 @@ export function normalizeStorageUrl(url: string | null | undefined): string | nu
     // Validate path doesn't start with invalid characters
     const cleanPath = url.replace(/^\/+/, '');
     if (cleanPath) {
-      const { data } = supabase.storage.from('menu-images').getPublicUrl(cleanPath);
+      const { data } = client.storage.from('menu-images').getPublicUrl(cleanPath);
       return data.publicUrl;
     }
     return null;
@@ -44,12 +45,16 @@ export function normalizeStorageUrl(url: string | null | undefined): string | nu
 
 /**
  * Upload menu image and return public URL
+ * @param file - File to upload
+ * @param menuId - Optional menu ID for filename
+ * @param client - Supabase client instance (must use the same client where user is authenticated)
  */
-export async function uploadMenuImage(file: File, menuId: string | null) {
+export async function uploadMenuImage(file: File, menuId: string | null, client: SupabaseClient = defaultSupabase) {
   // Check authentication first
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await client.auth.getSession();
   if (!session) {
     console.error('❌ Not authenticated! Please login first.');
+    console.error('💡 Tip: Pass the authenticated Supabase client as the third parameter');
     throw new Error('You must be logged in to upload images');
   }
   console.log('✅ User authenticated:', session.user.email);
@@ -80,7 +85,7 @@ export async function uploadMenuImage(file: File, menuId: string | null) {
   
   console.log('📤 Uploading:', { key, size: file.size, type: file.type, bucket: 'menu-images' });
   
-  const { data, error } = await supabase.storage
+  const { data, error } = await client.storage
     .from('menu-images')
     .upload(key, file, { 
       cacheControl: '3600',
@@ -94,6 +99,6 @@ export async function uploadMenuImage(file: File, menuId: string | null) {
   
   console.log('✅ Upload success:', data);
   
-  const { data: urlData } = supabase.storage.from('menu-images').getPublicUrl(key);
+  const { data: urlData } = client.storage.from('menu-images').getPublicUrl(key);
   return urlData.publicUrl as string;
 }

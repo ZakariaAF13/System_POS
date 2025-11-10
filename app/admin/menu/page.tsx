@@ -139,7 +139,7 @@ export default function MenuPage() {
       setSavingPromo(true);
       let image_url: string | null | undefined = formPromo.image_url ?? undefined;
       if (filePromo) {
-        image_url = await uploadMenuImage(filePromo, formPromo.id ?? null);
+        image_url = await uploadMenuImage(filePromo, formPromo.id ?? null, supabase);
       }
       const payload = {
         title: formPromo.title.trim(),
@@ -148,20 +148,45 @@ export default function MenuPage() {
         active: formPromo.active,
         image_url: image_url ?? null,
       };
-      if (!payload.title || isNaN(payload.discount)) {
-        throw new Error('Judul dan diskon wajib diisi');
+      
+      // Validate required fields
+      if (!payload.title || isNaN(payload.discount) || payload.discount < 0) {
+        throw new Error('Judul dan diskon (harus >= 0) wajib diisi');
       }
+      
+      console.log('📝 Promo payload to save:', payload);
+      
       if (formPromo.id) {
-        const { error } = await supabase
+        console.log('🔄 Updating promo:', formPromo.id);
+        const { data, error } = await supabase
           .from('promotions')
           .update(payload)
-          .eq('id', formPromo.id);
-        if (error) throw error;
+          .eq('id', formPromo.id)
+          .select();
+        
+        if (error) {
+          console.error('❌ Promo update error:', error);
+          throw error;
+        }
+        console.log('✅ Promo update success:', data);
       } else {
-        const { error } = await supabase
+        console.log('➕ Inserting new promo');
+        const { data, error } = await supabase
           .from('promotions')
-          .insert(payload);
-        if (error) throw error;
+          .insert(payload)
+          .select();
+        
+        if (error) {
+          console.error('❌ Promo insert error:', error);
+          console.error('📋 Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw error;
+        }
+        console.log('✅ Promo insert success:', data);
       }
       resetPromoForm();
       await fetchPromotions();
@@ -206,7 +231,7 @@ export default function MenuPage() {
       setSaving(true);
       let image_url: string | null | undefined = form.image_url ?? undefined;
       if (file) {
-        image_url = await uploadMenuImage(file, form.id ?? null);
+        image_url = await uploadMenuImage(file, form.id ?? null, supabase);
       }
 
       const payload = {
@@ -217,20 +242,45 @@ export default function MenuPage() {
         available: form.available,
         image_url: image_url ?? null,
       };
-      if (!payload.name || isNaN(payload.price) || !payload.category) {
-        throw new Error('Nama, harga, dan kategori wajib diisi');
+      
+      // Validate required fields
+      if (!payload.name || isNaN(payload.price) || payload.price <= 0 || !payload.category) {
+        throw new Error('Nama, harga (harus > 0), dan kategori wajib diisi');
       }
+      
+      console.log('📝 Payload to save:', payload);
+      
       if (form.id) {
-        const { error } = await supabase
+        console.log('🔄 Updating menu item:', form.id);
+        const { data, error } = await supabase
           .from('menu_items')
           .update(payload)
-          .eq('id', form.id);
-        if (error) throw error;
+          .eq('id', form.id)
+          .select();
+        
+        if (error) {
+          console.error('❌ Update error:', error);
+          throw error;
+        }
+        console.log('✅ Update success:', data);
       } else {
-        const { error } = await supabase
+        console.log('➕ Inserting new menu item');
+        const { data, error } = await supabase
           .from('menu_items')
-          .insert(payload);
-        if (error) throw error;
+          .insert(payload)
+          .select();
+        
+        if (error) {
+          console.error('❌ Insert error:', error);
+          console.error('📋 Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw error;
+        }
+        console.log('✅ Insert success:', data);
       }
       resetForm();
       await fetchItems();
@@ -297,7 +347,7 @@ export default function MenuPage() {
             />
             {form.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={normalizeStorageUrl(form.image_url) || ''} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
+              <img src={normalizeStorageUrl(form.image_url, supabase) || ''} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
             )}
           </div>
           <div className="md:col-span-6 flex gap-2 justify-end">
@@ -351,7 +401,7 @@ export default function MenuPage() {
                         <div className="flex items-center gap-3">
                           {item.image_url && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={normalizeStorageUrl(item.image_url) || ''} alt={item.name} className="w-10 h-10 object-cover rounded border border-border" />
+                            <img src={normalizeStorageUrl(item.image_url, supabase) || ''} alt={item.name} className="w-10 h-10 object-cover rounded border border-border" />
                           )}
                           <span>{item.name}</span>
                         </div>
@@ -428,7 +478,7 @@ export default function MenuPage() {
           />
           {formPromo.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={normalizeStorageUrl(formPromo.image_url) || ''} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
+            <img src={normalizeStorageUrl(formPromo.image_url, supabase) || ''} alt="preview" className="w-16 h-16 object-cover rounded border border-border" />
           )}
         </div>
         <div className="md:col-span-6 flex gap-2 justify-end">
@@ -481,7 +531,7 @@ export default function MenuPage() {
                       <div className="flex items-center gap-3">
                         {p.image_url && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={normalizeStorageUrl(p.image_url) || ''} alt={p.title} className="w-10 h-10 object-cover rounded border border-border" />
+                          <img src={normalizeStorageUrl(p.image_url, supabase) || ''} alt={p.title} className="w-10 h-10 object-cover rounded border border-border" />
                         )}
                         <span>{p.title}</span>
                       </div>
