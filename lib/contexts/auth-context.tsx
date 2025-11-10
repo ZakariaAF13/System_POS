@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, createSupabaseClientWithKey } from '@/lib/supabase';
 
@@ -29,7 +29,11 @@ export function AuthProvider({ children, scope }: { children: ReactNode; scope?:
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<'admin' | 'kasir' | null>(null);
   const [loading, setLoading] = useState(true);
-  const client = scope ? createSupabaseClientWithKey(`pos-${scope}`) : supabase;
+  
+  // Memoize client to ensure it's only created once per scope
+  const client = useMemo(() => {
+    return scope ? createSupabaseClientWithKey(`pos-${scope}`) : supabase;
+  }, [scope]);
 
   useEffect(() => {
     const fetchProfile = async (userId: string, user: User) => {

@@ -46,12 +46,54 @@ export function normalizeStorageUrl(url: string | null | undefined): string | nu
  * Upload menu image and return public URL
  */
 export async function uploadMenuImage(file: File, menuId: string | null) {
-  const ext = file.name.split('.').pop() || 'jpg';
+  // Check authentication first
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    console.error('❌ Not authenticated! Please login first.');
+    throw new Error('You must be logged in to upload images');
+  }
+  console.log('✅ User authenticated:', session.user.email);
+  
+  // Validate file
+  if (!file || !(file instanceof File)) {
+    throw new Error('Invalid file: must be a File object');
+  }
+  
+  if (file.size === 0) {
+    throw new Error('File is empty');
+  }
+  
+  if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    throw new Error('File too large (max 5MB)');
+  }
+  
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+  if (!allowedExts.includes(ext)) {
+    throw new Error(`Invalid file type. Allowed: ${allowedExts.join(', ')}`);
+  }
+  
   // Use flat structure: menuId-timestamp.ext or timestamp.ext
   // This avoids nested folder RLS issues
-  const key = menuId ? `${menuId}-${Date.now()}.${ext}` : `${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from('menu-images').upload(key, file, { upsert: true });
-  if (error) throw error;
-  const { data } = supabase.storage.from('menu-images').getPublicUrl(key);
-  return data.publicUrl as string;
+  const timestamp = Date.now();
+  const key = menuId ? `${menuId}-${timestamp}.${ext}` : `${timestamp}.${ext}`;
+  
+  console.log('📤 Uploading:', { key, size: file.size, type: file.type, bucket: 'menu-images' });
+  
+  const { data, error } = await supabase.storage
+    .from('menu-images')
+    .upload(key, file, { 
+      cacheControl: '3600',
+      upsert: true 
+    });
+  
+  if (error) {
+    console.error('❌ Upload error:', error);
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+  
+  console.log('✅ Upload success:', data);
+  
+  const { data: urlData } = supabase.storage.from('menu-images').getPublicUrl(key);
+  return urlData.publicUrl as string;
 }
