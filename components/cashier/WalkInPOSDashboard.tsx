@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase';
-import { mockMenuItems } from '@/lib/data/mock-data';
+import { normalizeStorageUrl } from '@/lib/menu-storage';
 import { ShoppingCart, Plus, Minus, Trash2, DollarSign, CreditCard, Smartphone } from 'lucide-react';
 import PaymentModal from '@/components/checkout/PaymentModal';
 
@@ -51,11 +51,52 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
   const [selectedPaymentType, setSelectedPaymentType] = useState<'cash' | 'edc' | 'ewallet' | null>(null);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-  const categories = ['All', ...Array.from(new Set(mockMenuItems.map(item => item.category)))];
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+
+  const categories = ['All', ...Array.from(new Set(menuItems.map(item => item.category)))];
 
   const filteredMenu = selectedCategory === 'All'
-    ? mockMenuItems
-    : mockMenuItems.filter(item => item.category === selectedCategory);
+    ? menuItems
+    : menuItems.filter(item => item.category === selectedCategory);
+
+  useEffect(() => {
+    let ignore = false;
+    const loadMenu = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*')
+          .eq('available', true)
+          .order('category')
+          .order('name');
+        if (error) throw error;
+        if (ignore) return;
+        const mapped = (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || '',
+          price: Number(item.price) || 0,
+          image: normalizeStorageUrl(item.image_url) || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+          category: item.category,
+          available: !!item.available,
+        }));
+        setMenuItems(mapped);
+      } catch (err) {
+        console.error('Error loading menu_items:', err);
+      }
+    };
+    loadMenu();
+    const channel = supabase
+      .channel('cashier-menu-items-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+        loadMenu();
+      })
+      .subscribe();
+    return () => {
+      ignore = true;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('id-ID', {
