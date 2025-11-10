@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AuthProvider } from '@/lib/contexts/auth-context';
-import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
 import { supabase } from '@/lib/supabase';
 
 interface AnalisisItem {
@@ -13,13 +11,7 @@ interface AnalisisItem {
 }
 
 export default function AnalisisPage() {
-  return (
-    <AuthProvider>
-      <AdminProtectedRoute>
-        <AnalisisCRUD />
-      </AdminProtectedRoute>
-    </AuthProvider>
-  );
+  return <AnalisisCRUD />;
 }
 
 function AnalisisCRUD() {

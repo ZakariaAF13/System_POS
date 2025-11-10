@@ -346,6 +346,9 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
                           src={item.image}
                           alt={item.name}
                           className="object-cover w-full h-full"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+                          }}
                         />
                       </div>
                       <h4 className="font-semibold text-sm line-clamp-1 mb-1">{item.name}</h4>
@@ -380,6 +383,9 @@ export default function WalkInPOSDashboard({ onOrderCreated }: WalkInPOSDashboar
                           src={item.menuItem.image}
                           alt={item.menuItem.name}
                           className="w-16 h-16 object-cover rounded"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+                          }}
                         />
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm truncate">{item.menuItem.name}</h4>

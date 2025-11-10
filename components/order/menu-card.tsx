@@ -55,6 +55,9 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps) {
             src={item.image}
             alt={item.name}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+            }}
           />
           {!item.available && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -101,6 +104,9 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps) {
                 src={item.image}
                 alt={item.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+                }}
               />
             </div>
 
