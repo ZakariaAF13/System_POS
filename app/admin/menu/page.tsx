@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import ImageCropper from '@/components/ui/ImageCropper';
+import { useToast } from '@/hooks/use-toast';
 
 type MenuItem = {
   id: string;
@@ -26,6 +27,7 @@ type MenuItem = {
 
 export default function MenuPage() {
   const supabase = useMemo(() => createSupabaseClientWithKey('pos-admin'), []);
+  const { toast } = useToast();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -178,6 +180,7 @@ export default function MenuPage() {
           throw error;
         }
         console.log('✅ Promo update success:', data);
+        toast({ title: 'Berhasil', description: 'Promo berhasil diperbarui' });
       } else {
         console.log('➕ Inserting new promo');
         const { data, error } = await supabase
@@ -196,6 +199,7 @@ export default function MenuPage() {
           throw error;
         }
         console.log('✅ Promo insert success:', data);
+        toast({ title: 'Berhasil', description: 'Promo berhasil ditambahkan' });
       }
       resetPromoForm();
       await fetchPromotions();
@@ -263,6 +267,7 @@ export default function MenuPage() {
           throw error;
         }
         console.log('✅ Update success:', data);
+        toast({ title: 'Berhasil', description: 'Menu berhasil diperbarui' });
       } else {
         console.log('➕ Inserting new menu item');
         const { data, error } = await supabase
@@ -281,6 +286,7 @@ export default function MenuPage() {
           throw error;
         }
         console.log('✅ Insert success:', data);
+        toast({ title: 'Berhasil', description: 'Menu berhasil ditambahkan' });
       }
       resetForm();
       await fetchItems();
@@ -323,6 +329,7 @@ export default function MenuPage() {
       const { error } = await supabase.from('menu_items').delete().eq('id', pendingDeleteMenuId);
       if (error) throw error;
       await fetchItems();
+      toast({ title: 'Berhasil', description: 'Menu berhasil dihapus' });
     } catch (e: any) {
       setError(e.message || 'Gagal menghapus menu');
     } finally {
@@ -338,6 +345,7 @@ export default function MenuPage() {
       const { error } = await supabase.from('promotions').delete().eq('id', pendingDeletePromoId);
       if (error) throw error;
       await fetchPromotions();
+      toast({ title: 'Berhasil', description: 'Promo berhasil dihapus' });
     } catch (e: any) {
       setErrorPromo(e.message || 'Gagal menghapus promo');
     } finally {
