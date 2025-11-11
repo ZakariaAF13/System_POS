@@ -158,7 +158,7 @@ function OrderPageContent() {
 
         <main className="flex-1 overflow-auto pb-20 md:pb-6">
           <div className="container max-w-7xl mx-auto p-4 md:p-6">
-            <PromotionsBanner />
+            {/* <PromotionsBanner /> */}
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold mb-2">{t('common.welcome')}</h1>
