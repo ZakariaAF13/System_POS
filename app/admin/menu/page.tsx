@@ -4,6 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { createSupabaseClientWithKey } from '@/lib/supabase';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { uploadMenuImage, normalizeStorageUrl } from '@/lib/menu-storage';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import ImageCropper from '@/components/ui/ImageCropper';
 
 type MenuItem = {
   id: string;
@@ -20,6 +29,7 @@ export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [menuDialogOpen, setMenuDialogOpen] = useState(false);
   const [form, setForm] = useState<{
     id?: string;
     name: string;
@@ -31,6 +41,9 @@ export default function MenuPage() {
   }>({ name: '', description: '', price: '', category: '', available: true, image_url: undefined });
   const [error, setError] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropTarget, setCropTarget] = useState<'menu' | 'promo'>('menu');
 
   type AdminPromotion = {
     id: string;
@@ -43,6 +56,7 @@ export default function MenuPage() {
   const [promos, setPromos] = useState<AdminPromotion[]>([]);
   const [loadingPromo, setLoadingPromo] = useState(true);
   const [savingPromo, setSavingPromo] = useState(false);
+  const [promoDialogOpen, setPromoDialogOpen] = useState(false);
   const [formPromo, setFormPromo] = useState<{
     id?: string;
     title: string;
@@ -57,6 +71,7 @@ export default function MenuPage() {
   const resetForm = () => {
     setForm({ name: '', description: '', price: '', category: '', available: true, id: undefined, image_url: undefined });
     setFile(null);
+    setMenuDialogOpen(false);
   };
 
   const fetchItems = async () => {
@@ -104,6 +119,7 @@ export default function MenuPage() {
   const resetPromoForm = () => {
     setFormPromo({ id: undefined, title: '', description: '', discount: '', active: true, image_url: undefined });
     setFilePromo(null);
+    setPromoDialogOpen(false);
   };
 
   const onEditPromo = (p: AdminPromotion) => {
@@ -116,6 +132,7 @@ export default function MenuPage() {
       image_url: p.image_url ?? undefined,
     });
     setFilePromo(null);
+    setPromoDialogOpen(true);
   };
 
   const onDeletePromo = async (id: string) => {
@@ -208,6 +225,7 @@ export default function MenuPage() {
       image_url: item.image_url ?? undefined,
     });
     setFile(null);
+    setMenuDialogOpen(true);
   };
 
   const onDelete = async (id: string) => {
@@ -291,6 +309,31 @@ export default function MenuPage() {
     }
   };
 
+  // File input handlers -> open cropper
+  const onSelectMenuImage: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setCropSrc(URL.createObjectURL(f));
+    setCropTarget('menu');
+    setCropOpen(true);
+  };
+
+  const onSelectPromoImage: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setCropSrc(URL.createObjectURL(f));
+    setCropTarget('promo');
+    setCropOpen(true);
+  };
+
+  const onCropConfirm = (blob: Blob) => {
+    const cropped = new File([blob], `${Date.now()}.jpg`, { type: 'image/jpeg' });
+    if (cropTarget === 'menu') setFile(cropped);
+    else setFilePromo(cropped);
+    setCropOpen(false);
+    setCropSrc(null);
+  };
+
   return (
     <>
     <div className="max-w-6xl mx-auto">
@@ -342,7 +385,7 @@ export default function MenuPage() {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={onSelectMenuImage}
               className="block w-full text-sm text-muted-foreground"
             />
             {form.image_url && (
@@ -473,7 +516,7 @@ export default function MenuPage() {
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setFilePromo(e.target.files?.[0] ?? null)}
+            onChange={onSelectPromoImage}
             className="block w-full text-sm text-muted-foreground"
           />
           {formPromo.image_url && (
@@ -559,6 +602,18 @@ export default function MenuPage() {
         </div>
       </div>
     </div>
+
+    {cropOpen && cropSrc && (
+      <Dialog open={cropOpen} onOpenChange={setCropOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sesuaikan Gambar</DialogTitle>
+          </DialogHeader>
+          <ImageCropper src={cropSrc} aspect={1} onCancel={() => setCropOpen(false)} onConfirm={onCropConfirm} />
+          <DialogFooter />
+        </DialogContent>
+      </Dialog>
+    )}
     </>
   );
 }
