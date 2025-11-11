@@ -57,6 +57,8 @@ export default function MenuPage() {
   const [loadingPromo, setLoadingPromo] = useState(true);
   const [savingPromo, setSavingPromo] = useState(false);
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
+  const [pendingDeleteMenuId, setPendingDeleteMenuId] = useState<string | null>(null);
+  const [pendingDeletePromoId, setPendingDeletePromoId] = useState<string | null>(null);
   const [formPromo, setFormPromo] = useState<{
     id?: string;
     title: string;
@@ -135,18 +137,8 @@ export default function MenuPage() {
     setPromoDialogOpen(true);
   };
 
-  const onDeletePromo = async (id: string) => {
-    if (!confirm('Hapus promo ini?')) return;
-    try {
-      setSavingPromo(true);
-      const { error } = await supabase.from('promotions').delete().eq('id', id);
-      if (error) throw error;
-      await fetchPromotions();
-    } catch (e: any) {
-      setErrorPromo(e.message || 'Gagal menghapus promo');
-    } finally {
-      setSavingPromo(false);
-    }
+  const onDeletePromo = (id: string) => {
+    setPendingDeletePromoId(id);
   };
 
   const onSubmitPromo = async (e: React.FormEvent) => {
@@ -228,18 +220,8 @@ export default function MenuPage() {
     setMenuDialogOpen(true);
   };
 
-  const onDelete = async (id: string) => {
-    if (!confirm('Hapus menu ini?')) return;
-    try {
-      setSaving(true);
-      const { error } = await supabase.from('menu_items').delete().eq('id', id);
-      if (error) throw error;
-      await fetchItems();
-    } catch (e: any) {
-      setError(e.message || 'Gagal menghapus menu');
-    } finally {
-      setSaving(false);
-    }
+  const onDelete = (id: string) => {
+    setPendingDeleteMenuId(id);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -332,6 +314,36 @@ export default function MenuPage() {
     else setFilePromo(cropped);
     setCropOpen(false);
     setCropSrc(null);
+  };
+
+  const confirmDeleteMenu = async () => {
+    if (!pendingDeleteMenuId) return;
+    try {
+      setSaving(true);
+      const { error } = await supabase.from('menu_items').delete().eq('id', pendingDeleteMenuId);
+      if (error) throw error;
+      await fetchItems();
+    } catch (e: any) {
+      setError(e.message || 'Gagal menghapus menu');
+    } finally {
+      setSaving(false);
+      setPendingDeleteMenuId(null);
+    }
+  };
+
+  const confirmDeletePromo = async () => {
+    if (!pendingDeletePromoId) return;
+    try {
+      setSavingPromo(true);
+      const { error } = await supabase.from('promotions').delete().eq('id', pendingDeletePromoId);
+      if (error) throw error;
+      await fetchPromotions();
+    } catch (e: any) {
+      setErrorPromo(e.message || 'Gagal menghapus promo');
+    } finally {
+      setSavingPromo(false);
+      setPendingDeletePromoId(null);
+    }
   };
 
   return (
@@ -603,11 +615,37 @@ export default function MenuPage() {
       </div>
     </div>
 
+    <Dialog open={!!pendingDeleteMenuId} onOpenChange={(o) => { if (!o) setPendingDeleteMenuId(null); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Hapus menu?</DialogTitle>
+        </DialogHeader>
+        <div className="text-sm text-muted-foreground">Tindakan ini tidak dapat dibatalkan.</div>
+        <DialogFooter>
+          <button type="button" className="px-3 py-2 border rounded" onClick={() => setPendingDeleteMenuId(null)}>Batal</button>
+          <button type="button" className="px-3 py-2 bg-red-600 text-white rounded disabled:opacity-50" disabled={saving} onClick={confirmDeleteMenu}>Hapus</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={!!pendingDeletePromoId} onOpenChange={(o) => { if (!o) setPendingDeletePromoId(null); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Hapus promo?</DialogTitle>
+        </DialogHeader>
+        <div className="text-sm text-muted-foreground">Tindakan ini tidak dapat dibatalkan.</div>
+        <DialogFooter>
+          <button type="button" className="px-3 py-2 border rounded" onClick={() => setPendingDeletePromoId(null)}>Batal</button>
+          <button type="button" className="px-3 py-2 bg-red-600 text-white rounded disabled:opacity-50" disabled={savingPromo} onClick={confirmDeletePromo}>Hapus</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     {cropOpen && cropSrc && (
       <Dialog open={cropOpen} onOpenChange={setCropOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sesuaikan Gambar</DialogTitle>
+          <DialogTitle>Sesuaikan Gambar</DialogTitle>
           </DialogHeader>
           <ImageCropper src={cropSrc} aspect={1} onCancel={() => setCropOpen(false)} onConfirm={onCropConfirm} />
           <DialogFooter />
