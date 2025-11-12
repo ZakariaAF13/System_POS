@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Smartphone, Wallet, QrCode, Loader2 } from 'lucide-react';
+import { Smartphone, Wallet, QrCode, Loader2, Landmark } from 'lucide-react';
 
 interface PaymentModalProps {
   open: boolean;
@@ -15,7 +15,17 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ open, onClose, amount, orderId, onPaymentSuccess }: PaymentModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<'qris' | 'gopay' | 'ovo' | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<
+    | 'qris'
+    | 'gopay'
+    | 'ovo'
+    | 'bca_va'
+    | 'bni_va'
+    | 'bri_va'
+    | 'mandiri_va'
+    | 'permata_va'
+    | null
+  >(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [snapToken, setSnapToken] = useState<string | null>(null);
   const functionsBase = process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_URL || '';
@@ -47,7 +57,9 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
       minimumFractionDigits: 0,
     }).format(price);
 
-  const handlePaymentMethodSelect = async (method: 'qris' | 'gopay' | 'ovo') => {
+  const handlePaymentMethodSelect = async (
+    method: NonNullable<typeof selectedMethod>
+  ) => {
     setSelectedMethod(method);
     setIsProcessing(true);
 
@@ -66,6 +78,8 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
         body: JSON.stringify({
           orderId,
           amount,
+          // For compatibility with expected backend shape, send the selected method as paymentType.
+          // Example values: 'qris', 'gopay', 'ovo', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va'
           paymentType: method,
         }),
       });
@@ -139,6 +153,7 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
         </DialogHeader>
 
         <div className="space-y-3 py-4">
+          {/* QRIS */}
           <Card
             className={`p-4 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
               selectedMethod === 'qris' ? 'border-primary bg-primary/5' : ''
@@ -150,8 +165,8 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
                 <QrCode className="h-6 w-6 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold">QRIS</h3>
-                <p className="text-sm text-muted-foreground">Scan QR Code untuk bayar</p>
+                <h3 className="font-semibold">QRIS (Semua Bank/Apps)</h3>
+                <p className="text-sm text-muted-foreground">Scan QR Code dari aplikasi bank/e-wallet</p>
               </div>
               {isProcessing && selectedMethod === 'qris' && (
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -159,6 +174,98 @@ export default function PaymentModal({ open, onClose, amount, orderId, onPayment
             </div>
           </Card>
 
+          {/* Virtual Account - Banks */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Virtual Account</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Card
+                className={`p-3 cursor-pointer transition-all hover:border-primary hover:shadow-sm ${
+                  selectedMethod === 'bca_va' ? 'border-primary bg-primary/5' : ''
+                }`}
+                onClick={() => !isProcessing && handlePaymentMethodSelect('bca_va')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <Landmark className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">BCA VA</div>
+                    <div className="text-xs text-muted-foreground">Virtual Account BCA</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card
+                className={`p-3 cursor-pointer transition-all hover:border-primary hover:shadow-sm ${
+                  selectedMethod === 'bni_va' ? 'border-primary bg-primary/5' : ''
+                }`}
+                onClick={() => !isProcessing && handlePaymentMethodSelect('bni_va')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <Landmark className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">BNI VA</div>
+                    <div className="text-xs text-muted-foreground">Virtual Account BNI</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card
+                className={`p-3 cursor-pointer transition-all hover:border-primary hover:shadow-sm ${
+                  selectedMethod === 'bri_va' ? 'border-primary bg-primary/5' : ''
+                }`}
+                onClick={() => !isProcessing && handlePaymentMethodSelect('bri_va')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <Landmark className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">BRI VA</div>
+                    <div className="text-xs text-muted-foreground">Virtual Account BRI</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card
+                className={`p-3 cursor-pointer transition-all hover:border-primary hover:shadow-sm ${
+                  selectedMethod === 'mandiri_va' ? 'border-primary bg-primary/5' : ''
+                }`}
+                onClick={() => !isProcessing && handlePaymentMethodSelect('mandiri_va')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <Landmark className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">Mandiri VA</div>
+                    <div className="text-xs text-muted-foreground">Virtual Account Mandiri</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card
+                className={`p-3 cursor-pointer transition-all hover:border-primary hover:shadow-sm ${
+                  selectedMethod === 'permata_va' ? 'border-primary bg-primary/5' : ''
+                }`}
+                onClick={() => !isProcessing && handlePaymentMethodSelect('permata_va')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <Landmark className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">Permata VA</div>
+                    <div className="text-xs text-muted-foreground">Virtual Account Permata</div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* E-Wallets */}
           <Card
             className={`p-4 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
               selectedMethod === 'gopay' ? 'border-primary bg-primary/5' : ''
