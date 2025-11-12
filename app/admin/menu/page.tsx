@@ -313,7 +313,6 @@ export default function MenuPage() {
     setCropTarget('promo');
     setCropOpen(true);
   };
-
   const onCropConfirm = (blob: Blob) => {
     const cropped = new File([blob], `${Date.now()}.jpg`, { type: 'image/jpeg' });
     if (cropTarget === 'menu') setFile(cropped);
@@ -321,7 +320,6 @@ export default function MenuPage() {
     setCropOpen(false);
     setCropSrc(null);
   };
-
   const confirmDeleteMenu = async () => {
     if (!pendingDeleteMenuId) return;
     try {
